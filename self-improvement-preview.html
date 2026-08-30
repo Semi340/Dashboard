@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vorschau · Self-Improvement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text-primary: #F2EFE6;
+  --text-secondary: #ABA79A;
+  --text-tertiary: #6F6C61;
+  --rose: #D98BA5;
+  --gold: #C9A227;
+  --mint: #6FE3A0;
+  --blue: #4FA3E0;
+  --violet: #9C8CE0;
+  --font-display: "Zilla Slab", Georgia, serif;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:#0A0C0B; color:var(--text-secondary); font-family:var(--font); -webkit-font-smoothing:antialiased; }
+body { min-height:100vh; padding:32px 20px 60px; position:relative; }
+body::before {
+  content:''; position:fixed; inset:0;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px),
+    radial-gradient(circle at 85% 0%, rgba(217,139,165,0.10), transparent 55%);
+  pointer-events:none; z-index:-1;
+}
+.page { max-width: 720px; margin:0 auto; }
+.header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; }
+.htitle { display:flex; align-items:center; gap:12px; }
+.header-emoji { font-size:28px; }
+h1 { font-family:var(--font-display); font-weight:700; letter-spacing:-0.01em; color:var(--text-primary); font-size:27px; margin:0; }
+.sub { font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 26px; }
+.add-btn-top { padding:9px 15px; border-radius:999px; border:1px dashed rgba(255,255,255,0.18); background:rgba(255,255,255,0.03); color:var(--text-tertiary); font-size:13px; cursor:pointer; }
+
+.section-label { font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 10px; display:flex; align-items:center; gap:7px; }
+.section-label .line { flex:1; height:1px; background:rgba(255,255,255,0.08); }
+
+.habit-row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); margin-bottom:8px; }
+.check { width:22px; height:22px; border-radius:7px; border:2px solid var(--c); flex:none; display:flex; align-items:center; justify-content:center; font-size:13px; }
+.check.on { background:var(--c); color:#0A0C0B; }
+.habit-name { flex:1; font-size:14px; color:var(--text-primary); display:flex; align-items:center; gap:8px; }
+.habit-streak { font-family:var(--font-mono); font-size:11px; color:var(--c); }
+.note-icon { font-size:13px; color:var(--text-tertiary); cursor:pointer; flex:none; }
+.habit-note { font-size:11.5px; color:var(--text-tertiary); font-style:italic; margin-top:2px; }
+.habit-row-wrap { margin-bottom:8px; }
+
+.goal-card { --c: var(--rose); background: radial-gradient(circle at 90% -10%, color-mix(in srgb, var(--c) 16%, transparent), transparent 60%), rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-top:2px solid var(--c); border-radius:16px; padding:18px; margin-bottom:14px; box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+.goal-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; }
+.goal-name { font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--text-primary); }
+.goal-nums { font-family:var(--font-mono); font-size:14px; color:var(--c); font-weight:600; }
+.goal-track { height:9px; border-radius:5px; background:rgba(255,255,255,0.06); overflow:hidden; margin-bottom:8px; }
+.goal-fill { height:100%; border-radius:5px; background:var(--c); }
+.goal-meta { font-size:11px; color:var(--text-tertiary); display:flex; justify-content:space-between; }
+
+.grid-wrap { background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:16px 18px; margin-bottom:26px; }
+.grid-days { display:grid; grid-template-columns: 100px repeat(7, 1fr); gap:6px 8px; align-items:center; margin-bottom:6px; }
+.grid-days span { font-family:var(--font-mono); font-size:9.5px; color:var(--text-tertiary); text-align:center; }
+.grid-row { display:grid; grid-template-columns: 100px repeat(7, 1fr); gap:6px 8px; align-items:center; margin-bottom:8px; }
+.grid-row .lbl { font-size:12px; color:var(--text-secondary); display:flex; align-items:center; gap:6px; }
+.cell { height:20px; border-radius:5px; background:rgba(255,255,255,0.05); }
+.cell.on { background:var(--c); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="htitle"><span class="header-emoji">🌱</span><h1>Self-Improvement</h1></div>
+    <div class="add-btn-top">+ Neuer Punkt</div>
+  </div>
+  <p class="sub">Habits & persönliche Ziele</p>
+
+  <div class="section-label">Heute<span class="line"></span></div>
+  <div class="habit-row-wrap">
+    <div class="habit-row"><div class="check on" style="--c:var(--rose)">✓</div><span class="habit-name">🧴 Skincare</span><span class="habit-streak" style="color:var(--rose)">7 Tage Streak</span><span class="note-icon">📝</span></div>
+  </div>
+  <div class="habit-row-wrap">
+    <div class="habit-row"><div class="check on" style="--c:var(--gold)">✓</div><span class="habit-name">⏰ No Snooze</span><span class="habit-streak" style="color:var(--gold)">5 Tage Streak</span><span class="note-icon">📝</span></div>
+  </div>
+  <div class="habit-row-wrap">
+    <div class="habit-row"><div class="check" style="--c:var(--mint)"></div><span class="habit-name">📖 Lesen</span><span class="habit-streak" style="color:var(--text-tertiary)">2 Tage Streak</span><span class="note-icon">📝</span></div>
+  </div>
+  <div class="habit-row-wrap">
+    <div class="habit-row"><div class="check on" style="--c:var(--blue)">✓</div><span class="habit-name">🧹 Aufräumen</span><span class="habit-streak" style="color:var(--blue)">1 Tag Streak</span><span class="note-icon">📝</span></div>
+    <div class="habit-note">📝 Küche & Schreibtisch aufgeräumt</div>
+  </div>
+  <div class="habit-row-wrap">
+    <div class="habit-row"><div class="check on" style="--c:var(--violet)">✓</div><span class="habit-name">📱 Socials</span><span class="habit-streak" style="color:var(--violet)">3 Tage Streak</span><span class="note-icon">📝</span></div>
+  </div>
+
+  <div style="height:20px"></div>
+
+  <div class="section-label">Ziele<span class="line"></span></div>
+  <div class="goal-card">
+    <div class="goal-head"><span class="goal-name">💼 LinkedIn-Netzwerk</span><span class="goal-nums">120 / 500</span></div>
+    <div class="goal-track"><div class="goal-fill" style="width:24%"></div></div>
+    <div class="goal-meta"><span>24% erreicht</span><span>Ziel: nach Auslandsaufenthalt · noch 138 Tage</span></div>
+  </div>
+  <div class="goal-card" style="--c:var(--mint)">
+    <div class="goal-head"><span class="goal-name">📚 Bücher dieses Jahr</span><span class="goal-nums">4 / 12</span></div>
+    <div class="goal-track"><div class="goal-fill" style="width:33%"></div></div>
+    <div class="goal-meta"><span>33% erreicht</span><span>Kein Datum gesetzt</span></div>
+  </div>
+
+  <div class="section-label">Wochenübersicht<span class="line"></span></div>
+  <div class="grid-wrap">
+    <div class="grid-days"><span></span><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
+    <div class="grid-row"><span class="lbl">🧴 Skincare</span>
+      <div class="cell on" style="--c:var(--rose)"></div><div class="cell on" style="--c:var(--rose)"></div><div class="cell on" style="--c:var(--rose)"></div><div class="cell on" style="--c:var(--rose)"></div><div class="cell on" style="--c:var(--rose)"></div><div class="cell on" style="--c:var(--rose)"></div><div class="cell on" style="--c:var(--rose)"></div>
+    </div>
+    <div class="grid-row"><span class="lbl">⏰ No Snooze</span>
+      <div class="cell" style="--c:var(--gold)"></div><div class="cell on" style="--c:var(--gold)"></div><div class="cell on" style="--c:var(--gold)"></div><div class="cell on" style="--c:var(--gold)"></div><div class="cell on" style="--c:var(--gold)"></div><div class="cell on" style="--c:var(--gold)"></div><div class="cell" style="--c:var(--gold)"></div>
+    </div>
+    <div class="grid-row"><span class="lbl">📖 Lesen</span>
+      <div class="cell on" style="--c:var(--mint)"></div><div class="cell" style="--c:var(--mint)"></div><div class="cell" style="--c:var(--mint)"></div><div class="cell" style="--c:var(--mint)"></div><div class="cell on" style="--c:var(--mint)"></div><div class="cell on" style="--c:var(--mint)"></div><div class="cell" style="--c:var(--mint)"></div>
+    </div>
+    <div class="grid-row"><span class="lbl">🧹 Aufräumen</span>
+      <div class="cell" style="--c:var(--blue)"></div><div class="cell" style="--c:var(--blue)"></div><div class="cell on" style="--c:var(--blue)"></div><div class="cell" style="--c:var(--blue)"></div><div class="cell" style="--c:var(--blue)"></div><div class="cell on" style="--c:var(--blue)"></div><div class="cell" style="--c:var(--blue)"></div>
+    </div>
+    <div class="grid-row"><span class="lbl">📱 Socials</span>
+      <div class="cell" style="--c:var(--violet)"></div><div class="cell" style="--c:var(--violet)"></div><div class="cell" style="--c:var(--violet)"></div><div class="cell on" style="--c:var(--violet)"></div><div class="cell on" style="--c:var(--violet)"></div><div class="cell on" style="--c:var(--violet)"></div><div class="cell" style="--c:var(--violet)"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
