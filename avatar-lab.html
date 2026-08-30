@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Avatar Lab · Nova</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
 <!-- ============================================================
  * AVATAR LAB — local playground for the Nova avatar.
  * Pick colors, try 5 designs, preview idle / thinking / happy,
@@ -16,15 +19,22 @@
   --c1: #6EE7B7;   /* primary / light */
   --c2: #67E8F9;   /* secondary / glow */
   --c3: #1f8f66;   /* deep / shadow   */
-  --bg: #05060c; --fg: #e9ecf5; --muted: rgba(233,236,245,.55); --line: rgba(255,255,255,.1);
+  --bg: #0A0C0B; --fg: #F2EFE6; --muted: rgba(242,239,230,.55); --line: rgba(255,255,255,.1);
+  --font-display: "Zilla Slab", Georgia, "Times New Roman", serif;
 }
-html, body { background: var(--bg); }
+html, body { background: var(--bg); position: relative; }
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px),
+    radial-gradient(circle at 15% 90%, rgba(201,162,39,0.08), transparent 55%);
+  pointer-events: none; z-index: -1;
+}
 body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: var(--fg); min-height: 100vh; }
 
 .shell { max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; }
 header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
-header h1 { font-family: 'Times New Roman', Georgia, serif; font-style: italic; font-weight: 500; font-size: 30px;
-  background: linear-gradient(90deg, var(--c2), var(--c1)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+header h1 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; font-size: 30px; color: var(--fg); }
 header .role { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
 .sub { color: var(--muted); font-size: 13.5px; margin-bottom: 26px; }
 

@@ -5,9 +5,12 @@
 <script src="/api/config"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0a0a0b">
+<meta name="theme-color" content="#0A0C0B">
 <title>Progressive Overload Coach</title>
 <script src="topbar.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
 
 <!-- =============================================================
      EDIT THIS BLOCK TO MAKE THE APP YOURS.
@@ -95,25 +98,34 @@ const CONFIG = {
 
 <style>
 :root {
-  --bg: #0a0a0b;
+  --bg: #0A0C0B;
   --bg-card: #111113;
-  --text-1: #ffffff;
-  --text-2: rgba(255,255,255,0.6);
-  --text-3: rgba(255,255,255,0.4);
-  --text-4: rgba(255,255,255,0.25);
+  --text-1: #F2EFE6;
+  --text-2: rgba(242,239,230,0.65);
+  --text-3: rgba(242,239,230,0.42);
+  --text-4: rgba(242,239,230,0.25);
   --border: rgba(255,255,255,0.06);
   --border-strong: rgba(255,255,255,0.14);
-  --accent: #ffffff;
-  --good: #6ee7b7;
-  --warn: #fbbf24;
-  --bad: #ff8a8a;
+  --gold: #C9A227;
+  --gold-dim: #7A611A;
+  --blue: #4FA3E0;
+  --red: #E0524A;
+  --orange: #E0785C;
+  --mint: #6FE3A0;
+  --brown: #C9A36B;
+  --violet: #9C8CE0;
+  --accent: var(--orange);
+  --good: var(--mint);
+  --warn: var(--gold);
+  --bad: var(--red);
+  --font-display: "Zilla Slab", Georgia, "Times New Roman", serif;
   --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, SF Mono, Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, #14141a 0%, #0a0a0b 60%);
+  background: var(--bg);
   color: var(--text-1);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
@@ -122,6 +134,14 @@ html, body {
   overflow-x: hidden;
   width: 100%;
   max-width: 100vw;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px),
+    radial-gradient(circle at 15% 90%, rgba(201,162,39,0.08), transparent 55%);
+  pointer-events: none; z-index: -1;
 }
 .po-shell {
   width: 100%; max-width: min(720px, 100vw);
@@ -224,7 +244,8 @@ img, video, canvas, svg { max-width: 100%; }
   margin-bottom: 18px;
 }
 .po-title {
-  font-size: 22px; font-weight: 700; letter-spacing: -0.015em;
+  font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -0.01em;
+  color: var(--text-1);
   margin: 0;
 }
 .po-icon-btn {
@@ -273,8 +294,8 @@ img, video, canvas, svg { max-width: 100%; }
 }
 .po-seg-btn:hover { color: var(--text-2); background: rgba(255,255,255,0.04); }
 .po-seg-btn.active {
-  background: linear-gradient(180deg, #ffffff 0%, #e8e5dd 100%);
-  color: #0a0a0b;
+  background: linear-gradient(180deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 78%, black) 100%);
+  color: var(--text-1);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 4px 12px rgba(0,0,0,0.35);
 }
 
@@ -424,8 +445,8 @@ img, video, canvas, svg { max-width: 100%; }
 }
 .po-reps-pill:hover { background: rgba(255,255,255,0.06); color: var(--text-1); }
 .po-reps-pill.active {
-  background: linear-gradient(180deg, #ffffff 0%, #e8e5dd 100%);
-  color: #0a0a0b; border-color: transparent;
+  background: linear-gradient(180deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 78%, black) 100%);
+  color: var(--text-1); border-color: transparent;
   font-weight: 800;
 }
 
@@ -433,8 +454,8 @@ img, video, canvas, svg { max-width: 100%; }
 .po-btn-primary {
   width: 100%; padding: 14px;
   border: 1px solid rgba(255,255,255,0.85);
-  background: linear-gradient(180deg, #ffffff 0%, #e8e5dd 100%);
-  color: #0a0a0b; border-radius: 12px;
+  background: linear-gradient(180deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 78%, black) 100%);
+  color: var(--text-1); border-radius: 12px;
   font-family: inherit; font-size: 14px; font-weight: 700;
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 4px 14px rgba(0,0,0,0.40);
@@ -573,8 +594,8 @@ img, video, canvas, svg { max-width: 100%; }
   -webkit-tap-highlight-color: transparent;
 }
 .po-modal-seg button.active {
-  background: linear-gradient(180deg, #ffffff 0%, #e8e5dd 100%);
-  color: #0a0a0b;
+  background: linear-gradient(180deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 78%, black) 100%);
+  color: var(--text-1);
 }
 .po-bw-toggle {
   display: flex; align-items: center; gap: 8px;
@@ -770,8 +791,8 @@ img, video, canvas, svg { max-width: 100%; }
 .po-tw-summary-sep { color: var(--text-4); margin: 0 4px; }
 .po-tw-summary-vol { font-size: 13px; color: var(--text-2); font-weight: 500; }
 .po-tw-done-btn {
-  background: linear-gradient(180deg, #ffffff 0%, #e8e5dd 100%);
-  color: #0a0a0b; border: none; border-radius: 999px;
+  background: linear-gradient(180deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 78%, black) 100%);
+  color: var(--text-1); border: none; border-radius: 999px;
   padding: 9px 16px;
   font-family: inherit; font-size: 12px; font-weight: 700;
   cursor: pointer;

@@ -20,7 +20,7 @@
 <script src="lock.js"></script>                                  <!-- passcode lock screen -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#050506">
+<meta name="theme-color" content="#0A0C0B">
 <title>New Section · Dashboard</title>
 
 <!-- Shared dashboard scripts. Keep these in this order. -->
@@ -28,20 +28,34 @@
 <script src="sync.js" defer></script>     <!-- cloud sync across devices -->
 <script src="topbar.js" defer></script>   <!-- top water bar + bottom tab nav -->
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================= */
 /*  DESIGN SYSTEM — these are the dashboard's shared tokens.      */
 /*  Don't change these if you want your section to match the      */
 /*  other pages. Use the variables (var(--text-primary), etc.)    */
-/*  instead of hard-coding colors.                                */
+/*  instead of hard-coding colors. Pick ONE category color from   */
+/*  --gold/--blue/--red/--orange/--mint/--brown/--violet for      */
+/*  this page's buttons, active states and highlights.            */
 /* ============================================================= */
 :root {
-  --text-primary: #FAFAFA;   /* headings, key numbers   */
-  --text-secondary: #B8B6B0; /* body text               */
-  --text-tertiary: #76746E;  /* labels, captions, hints */
-  --success: #6BE3A4;        /* green  — done / good    */
-  --warning: #F2C063;        /* amber  — caution        */
-  --danger:  #FF6B6B;        /* red    — bad / delete   */
+  --text-primary: #F2EFE6;   /* headings, key numbers   */
+  --text-secondary: #ABA79A; /* body text               */
+  --text-tertiary: #6F6C61;  /* labels, captions, hints */
+  --gold: #C9A227;
+  --gold-dim: #7A611A;
+  --blue: #4FA3E0;
+  --red: #E0524A;
+  --orange: #E0785C;
+  --mint: #6FE3A0;
+  --brown: #C9A36B;
+  --violet: #9C8CE0;
+  --success: var(--mint);    /* green  — done / good    */
+  --warning: var(--gold);    /* amber  — caution        */
+  --danger:  var(--red);     /* red    — bad / delete   */
+  --font-display: "Zilla Slab", Georgia, "Times New Roman", serif;
   --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
@@ -49,7 +63,7 @@
 * { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0;
-  background: #050506;
+  background: #0A0C0B;
   color: var(--text-secondary);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
@@ -62,17 +76,15 @@ body {
   overflow-x: hidden;
   padding: max(28px, env(safe-area-inset-top)) 20px 60px;
 }
-/* Soft drifting color glow behind everything. */
+/* Dezente Nadelstreifen-Textur (Wall Street Vivid). */
 body::before {
   content: '';
   position: fixed; inset: 0;
   background:
-    radial-gradient(circle at 82% 14%, rgba(224, 118, 88, 0.16), transparent 45%),
-    radial-gradient(circle at 18% 90%, rgba(180, 180, 200, 0.06), transparent 50%);
-  filter: blur(40px);
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px),
+    radial-gradient(circle at 15% 90%, rgba(201,162,39,0.08), transparent 55%);
   pointer-events: none;
   z-index: -2;
-  animation: drift 36s ease-in-out infinite alternate;
 }
 /* Faint dot texture. */
 body::after {
@@ -93,11 +105,10 @@ body::after {
 /* Big gradient page title. */
 .dash-title {
   margin: 0 0 14px;
+  font-family: var(--font-display);
   font-size: 28px; font-weight: 700;
-  letter-spacing: -0.025em;
-  background: linear-gradient(180deg, #FFFFFF 0%, #C7C4BC 120%);
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent; color: transparent;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
 }
 @media (max-width: 480px) { .dash-title { font-size: 22px; } }
 
