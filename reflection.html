@@ -29,6 +29,7 @@
   --violet: #9C8CE0;
   --peach: #E3A17E;
   --teal: #5AC8B0;
+  --rose: #D98BA5;
   --success: var(--mint);
   --warning: var(--gold);
   --danger:  var(--red);
@@ -373,12 +374,34 @@ textarea:focus { border-color: rgba(90,200,176,0.4); }
     return { value: delta, display: sign + Math.abs(Math.round(delta)) + ' ' + currency, detail };
   }
 
+  function selfImprovementSummary(ps, pe) {
+    // Snapshot-style, not a period aggregate like the other sources — only
+    // meaningful for the period that contains today (the current week/month).
+    const today = startOfDay(new Date());
+    if (!inPeriod(today, ps, pe)) return null;
+    const items = readJSON('si:items', []);
+    const logs = readJSON('si:logs', []);
+    const habits = items.filter(i => i.type === 'habit' && !i.archived);
+    const goals = items.filter(i => i.type === 'goal' && !i.archived);
+    if (!habits.length && !goals.length) return null;
+    const todayISO = toISO(today);
+    const doneToday = habits.filter(h => logs.some(l => l.itemId === h.id && l.date === todayISO && l.done)).length;
+    let parts = [];
+    if (habits.length) parts.push(doneToday + '/' + habits.length + ' Habits heute');
+    if (goals.length) {
+      const top = goals.slice().sort((a, b) => (b.target ? b.current / b.target : 0) - (a.target ? a.current / a.target : 0))[0];
+      parts.push(top.name + ' ' + top.current + '/' + top.target);
+    }
+    return { value: habits.length ? doneToday / habits.length : 0, display: parts.join(' · '), detail: null };
+  }
+
   const SOURCES = [
     { key: 'learning', emoji: '📚', label: 'Learning', color: 'var(--violet)', compute: learningSummary, compactExpandable: true },
     { key: 'gym', emoji: '🏋️', label: 'Gym', color: 'var(--orange)', compute: gymSummary, compactExpandable: true },
     { key: 'water', emoji: '💧', label: 'Wasserziel erreicht', color: 'var(--blue)', compute: waterSummary, compactExpandable: false },
     { key: 'food', emoji: '🍽️', label: 'Ernährung', color: 'var(--peach)', compute: foodSummary, compactExpandable: true },
-    { key: 'finance', emoji: '💰', label: 'Net Worth', color: 'var(--gold)', compute: financeSummary, compactExpandable: false }
+    { key: 'finance', emoji: '💰', label: 'Net Worth', color: 'var(--gold)', compute: financeSummary, compactExpandable: false },
+    { key: 'self_improvement', emoji: '🌱', label: 'Self-Improvement', color: 'var(--rose)', compute: selfImprovementSummary, compactExpandable: false }
   ];
 
   function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }

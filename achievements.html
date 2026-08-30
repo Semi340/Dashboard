@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="lock.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A0C0B">
+<title>Achievements · Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text-primary: #F2EFE6;
+  --text-secondary: #ABA79A;
+  --text-tertiary: #6F6C61;
+  --gold: #C9A227;
+  --gold-dim: #7A611A;
+  --blue: #4FA3E0;
+  --red: #E0524A;
+  --orange: #E0785C;
+  --mint: #6FE3A0;
+  --brown: #C9A36B;
+  --violet: #9C8CE0;
+  --peach: #E3A17E;
+  --teal: #5AC8B0;
+  --rose: #D98BA5;
+  --success: var(--mint);
+  --warning: var(--gold);
+  --danger:  var(--red);
+  --c: var(--gold);
+  --font-display: "Zilla Slab", Georgia, "Times New Roman", serif;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: #0A0C0B;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  min-height: 100vh; position: relative; overflow-x: hidden;
+  padding: max(28px, env(safe-area-inset-top)) 20px calc(80px + env(safe-area-inset-bottom));
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px),
+    radial-gradient(circle at 85% 0%, rgba(201,162,39,0.10), transparent 55%);
+  pointer-events: none; z-index: -2;
+}
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.014) 1px, transparent 1px);
+  background-size: 3px 3px; pointer-events: none; z-index: -1;
+}
+.page { max-width: 760px; margin: 0 auto; }
+
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 10px; }
+.htitle { display: flex; align-items: center; gap: 12px; }
+.header-emoji { font-size: 28px; }
+h1 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); font-size: 27px; margin: 0; }
+.head-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rank-badge { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); padding: 6px 12px; border-radius: 999px; }
+.progress-badge { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--gold); background: rgba(201,162,39,0.14); border: 1px solid rgba(201,162,39,0.35); padding: 6px 16px; border-radius: 999px; }
+.sub { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-tertiary); margin: 0 0 22px; }
+
+.section-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-tertiary); margin: 0 0 10px; display: flex; align-items: center; gap: 7px; }
+.section-label .line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+
+/* Hero */
+.hero { position: relative; overflow: hidden; border-radius: 20px; padding: 28px 26px; margin-bottom: 28px; text-align: center; background: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--c) 30%, transparent), transparent 65%), rgba(255,255,255,0.045); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); box-shadow: 0 0 50px color-mix(in srgb, var(--c) 25%, transparent), 0 20px 50px rgba(0,0,0,0.4); }
+.hero .sparkle { position: absolute; font-size: 14px; opacity: 0.35; }
+.hero-tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c); margin-bottom: 10px; }
+.hero-icon { font-size: 52px; margin-bottom: 10px; }
+.hero-title { font-family: var(--font-display); font-size: 23px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.hero-sub { font-family: var(--font-mono); font-size: 12px; color: var(--text-tertiary); }
+
+.new-row { display: flex; gap: 12px; overflow-x: auto; margin-bottom: 28px; padding-bottom: 4px; }
+.new-badge { flex: none; width: 140px; text-align: center; padding: 18px 12px; border-radius: 16px; background: radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--c) 30%, transparent), transparent 70%), rgba(255,255,255,0.05); border: 1px solid var(--c); box-shadow: 0 0 24px color-mix(in srgb, var(--c) 35%, transparent), 0 14px 34px rgba(0,0,0,0.35); }
+.new-badge .icon { font-size: 32px; margin-bottom: 8px; }
+.new-badge .t { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+.new-badge .d { font-family: var(--font-mono); font-size: 9.5px; color: var(--c); }
+.new-tag { display: inline-block; font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #0A0C0B; background: var(--c); padding: 2px 7px; border-radius: 999px; margin-bottom: 8px; }
+
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+@media (max-width: 560px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+
+.badge { position: relative; border-radius: 16px; padding: 16px 14px; text-align: center; box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+.badge.unlocked { background: radial-gradient(circle at 85% -10%, color-mix(in srgb, var(--c) 20%, transparent), transparent 60%), rgba(255,255,255,0.04); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); border-top: 2px solid var(--c); }
+.badge.locked { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); opacity: 0.65; }
+.badge .icon { font-size: 28px; margin-bottom: 8px; display: block; }
+.badge.locked .icon { filter: grayscale(1); opacity: 0.5; }
+.badge .t { font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; line-height: 1.2; }
+.badge.unlocked .date { font-family: var(--font-mono); font-size: 9.5px; color: var(--c); }
+.badge.locked .prog-label { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-tertiary); margin-bottom: 5px; }
+.prog-track { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.prog-fill { height: 100%; background: var(--c); border-radius: 3px; transition: width 0.3s ease; }
+.close-tag { display: inline-block; font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: #0A0C0B; background: var(--c); padding: 2px 7px; border-radius: 999px; margin-bottom: 7px; }
+.manual-tag { position: absolute; top: 8px; right: 8px; font-family: var(--font-mono); font-size: 7.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 999px; }
+.add-tile { border: 1px dashed rgba(255,255,255,0.15); background: rgba(255,255,255,0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: var(--text-tertiary); font-family: inherit; min-height: 108px; -webkit-tap-highlight-color: transparent; }
+.add-tile:hover { border-color: rgba(255,255,255,0.3); color: var(--text-primary); }
+.add-tile .icon { font-size: 24px; opacity: 0.7; margin-bottom: 6px; }
+
+.empty-state { text-align: center; font-size: 12px; font-style: italic; color: var(--text-tertiary); padding: 14px 0; }
+
+/* manual add form */
+.manual-form { display: none; flex-direction: column; gap: 10px; margin-bottom: 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px; }
+.manual-form.open { display: flex; }
+.manual-form-row { display: flex; gap: 8px; }
+.manual-form input { background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.09); border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 13.5px; padding: 9px 11px; outline: none; }
+.manual-form input:focus { border-color: rgba(201,162,39,0.45); }
+.manual-emoji-input { width: 54px; text-align: center; flex: none; }
+.manual-title-input { flex: 1; min-width: 0; }
+.manual-date-input { flex: none; }
+.color-swatches { display: flex; gap: 7px; flex-wrap: wrap; }
+.color-swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; -webkit-tap-highlight-color: transparent; }
+.color-swatch.selected { border-color: var(--text-primary); }
+.manual-form-actions { display: flex; gap: 8px; }
+.manual-form-actions button { border: 0; border-radius: 8px; padding: 9px 14px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; flex: 1; }
+.mf-save { background: var(--gold); color: #0A0C0B; }
+.mf-cancel { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+
+.confetti-piece { position: fixed; top: -12px; width: 8px; height: 14px; opacity: 0.95; pointer-events: none; z-index: 300; animation: confetti-fall linear forwards; }
+@keyframes confetti-fall { to { transform: translateY(105vh) rotate(720deg); opacity: 0; } }
+
+@media (max-width: 480px) {
+  body { padding: max(20px, env(safe-area-inset-top)) 14px calc(60px + env(safe-area-inset-bottom)); }
+  .hero { padding: 22px 18px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="htitle"><span class="header-emoji">🏆</span><h1>Achievements</h1></div>
+    <div class="head-right">
+      <span class="rank-badge" id="rankBadge">—</span>
+      <span class="progress-badge" id="progressBadge">—</span>
+    </div>
+  </div>
+  <p class="sub">Automatisch berechnet + manuell ergänzbar</p>
+
+  <div id="heroWrap"></div>
+
+  <div id="newSection" style="display:none">
+    <div class="section-label">Neu freigeschaltet<span class="line"></span></div>
+    <div class="new-row" id="newRow"></div>
+  </div>
+
+  <div class="manual-form" id="manualForm">
+    <div class="manual-form-row">
+      <input class="manual-emoji-input" id="manEmoji" type="text" placeholder="🏅" maxlength="4">
+      <input class="manual-title-input" id="manTitle" type="text" placeholder="Titel…" autocomplete="off">
+      <input class="manual-date-input" id="manDate" type="date">
+    </div>
+    <div class="color-swatches" id="colorSwatches"></div>
+    <div class="manual-form-actions">
+      <button class="mf-save" id="manSave" type="button">Anlegen</button>
+      <button class="mf-cancel" id="manCancel" type="button">Abbrechen</button>
+    </div>
+  </div>
+
+  <div class="section-label">Freigeschaltet<span class="line"></span></div>
+  <div class="grid" id="unlockedGrid"></div>
+
+  <div id="lockedSection">
+    <div class="section-label">Noch gesperrt<span class="line"></span></div>
+    <div class="grid" id="lockedGrid"></div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  function readJSON(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; } }
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function parseISO(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+  function startOfDay(d) { const c = new Date(d); c.setHours(0, 0, 0, 0); return c; }
+
+  const UNLOCKS_KEY = 'ach:unlocks';
+  const MANUAL_KEY = 'ach:manual';
+  function loadUnlocks() { return readJSON(UNLOCKS_KEY, []); }
+  function saveUnlocks(v) { localStorage.setItem(UNLOCKS_KEY, JSON.stringify(v)); }
+  function loadManual() { return readJSON(MANUAL_KEY, []); }
+  function saveManual(v) { localStorage.setItem(MANUAL_KEY, JSON.stringify(v)); }
+  function uid() { return 'm' + Date.now() + Math.floor(Math.random() * 1000); }
+
+  /* ============================================================
+     SOURCE READERS — pure functions over the other pages' own
+     localStorage data. Achievements that could regress after being
+     hit (net worth, habit streaks) scan the FULL history for the
+     best value ever reached; the rest are monotonic counters so
+     "current value" already equals "best value ever".
+     ============================================================ */
+  function sumLearningMinutes() {
+    return readJSON('learn:entries', []).reduce((s, e) => s + (e.minutes || 0), 0);
+  }
+  function maxHabitStreakEver() {
+    const logs = readJSON('si:logs', []);
+    const items = readJSON('si:items', []);
+    let max = 0;
+    items.filter(i => i.type === 'habit').forEach(h => {
+      const doneDates = logs.filter(l => l.itemId === h.id && l.done).map(l => l.date).sort();
+      let run = 0, prev = null;
+      doneDates.forEach(d => {
+        run = (prev && (parseISO(d) - parseISO(prev)) / 86400000 === 1) ? run + 1 : 1;
+        if (run > max) max = run;
+        prev = d;
+      });
+    });
+    return max;
+  }
+  function maxBenchWeight() {
+    const state = readJSON('po_coach_v1', null);
+    if (!state || !Array.isArray(state.exercises)) return 0;
+    let max = 0;
+    state.exercises.forEach(ex => {
+      if (!/bench|bankdr(ü|u)ck/i.test(ex.name || '')) return;
+      (state.logs[ex.id] || []).forEach(l => { if ((l.weight || 0) > max) max = l.weight; });
+    });
+    return max;
+  }
+  function linkedinProgress() {
+    const items = readJSON('si:items', []);
+    const g = items.find(i => i.type === 'goal' && /linkedin/i.test(i.name || ''));
+    if (!g) return { current: 0, target: 500 };
+    return { current: g.current || 0, target: g.target || 500 };
+  }
+  function maxNetWorthEver() {
+    return readJSON('nw:history', []).reduce((m, h) => Math.max(m, h.v || 0), 0);
+  }
+  function reflectionWeeklyCount() {
+    return readJSON('reflection:entries', []).filter(e => e.type === 'week').length;
+  }
+  function waterGoalDaysAllTime() {
+    const w = readJSON('po_water_v1', null);
+    if (!w || !w.logs || !Object.keys(w.logs).length) return 0;
+    const profile = Object.assign({ weightKg: 75, age: 25, sex: 'm', activityHrsPerWeek: 5 }, w.profile || {});
+    const wKg = w.weightUnit === 'lb' ? (profile.weightKg || 0) / 2.20462 : (profile.weightKg || 0);
+    const base = wKg * 35;
+    const exercise = (profile.activityHrsPerWeek || 0) / 7 * 500;
+    const cafLogs = readJSON('caf:logs', []);
+    const midnight = startOfDay(new Date()).getTime();
+    const caffeineMgToday = Math.round(cafLogs.filter(l => l.ts >= midnight).reduce((a, l) => a + (l.mg || 0), 0));
+    const caffeine = Math.max(0, caffeineMgToday - 200) * 1.5;
+    const subs = (w.substances || []).reduce((s, x) => { const dose = (x.dose != null ? x.dose : x.defaultDose) || 0; return s + Math.max(0, dose * (x.mlPerUnit || 0)); }, 0);
+    let adjust = 0; if (profile.sex === 'm') adjust += 200; if ((profile.age || 0) >= 50) adjust += 100;
+    const targetMl = base + exercise + caffeine + subs + adjust;
+    const unitMl = w.unit === 'bottle' ? (w.bottleMl || 500) : w.unit === 'glass' ? (w.glassMl || 250) : w.unit === 'oz' ? 30 : 1;
+    let count = 0;
+    Object.keys(w.logs).forEach(k => { if ((w.logs[k] || 0) * unitMl >= targetMl) count++; });
+    return count;
+  }
+  function boxingSessionCount() {
+    const state = readJSON('po_coach_v1', null);
+    return state && Array.isArray(state.boxingSessions) ? state.boxingSessions.length : 0;
+  }
+
+  /* ============================================================
+     ACHIEVEMENTS — startset. Add new rows here; nothing else needs
+     to change to support a new achievement.
+     ============================================================ */
+  const ACHIEVEMENTS = [
+    { id: 'streak_30', title: '30-Tage-Streak', icon: '🔥', color: 'var(--rose)',
+      check: () => { const v = maxHabitStreakEver(); return { current: v, target: 30, unlocked: v >= 30 }; },
+      fmt: (c, t) => Math.min(c, t) + ' / ' + t + ' Tage' },
+    { id: 'gym_100kg_bench', title: '100kg Bankdrücken', icon: '🏋️', color: 'var(--orange)',
+      check: () => { const v = maxBenchWeight(); return { current: v, target: 100, unlocked: v >= 100 }; },
+      fmt: (c, t) => Math.min(c, t) + 'kg / ' + t + 'kg' },
+    { id: 'linkedin_500', title: '500 LinkedIn-Connections', icon: '📇', color: 'var(--rose)',
+      check: () => { const p = linkedinProgress(); return { current: p.current, target: p.target, unlocked: p.target > 0 && p.current >= p.target }; },
+      fmt: (c, t) => Math.min(c, t) + ' / ' + t },
+    { id: 'learning_50h', title: '50h Learning', icon: '📚', color: 'var(--violet)',
+      check: () => { const v = sumLearningMinutes(); return { current: v, target: 3000, unlocked: v >= 3000 }; },
+      fmt: (c, t) => (Math.min(c, t) / 60).toFixed(1) + 'h / ' + (t / 60) + 'h' },
+    { id: 'networth_10k', title: '10.000€ Net Worth', icon: '💰', color: 'var(--gold)',
+      check: () => { const v = maxNetWorthEver(); return { current: v, target: 10000, unlocked: v >= 10000 }; },
+      fmt: (c, t) => Math.round(Math.min(c, t)).toLocaleString('de-DE') + ' / ' + t.toLocaleString('de-DE') + '€' },
+    { id: 'reflection_12', title: '12 Wochenrückblicke', icon: '📆', color: 'var(--teal)',
+      check: () => { const v = reflectionWeeklyCount(); return { current: v, target: 12, unlocked: v >= 12 }; },
+      fmt: (c, t) => Math.min(c, t) + ' / ' + t },
+    { id: 'water_30', title: '30 Tage Wasserziel', icon: '💧', color: 'var(--blue)',
+      check: () => { const v = waterGoalDaysAllTime(); return { current: v, target: 30, unlocked: v >= 30 }; },
+      fmt: (c, t) => Math.min(c, t) + ' / ' + t },
+    { id: 'boxing_10', title: '10 Box-Sessions', icon: '🥊', color: 'var(--red)',
+      check: () => { const v = boxingSessionCount(); return { current: v, target: 10, unlocked: v >= 10 }; },
+      fmt: (c, t) => Math.min(c, t) + ' / ' + t }
+  ];
+
+  /* ---------- evaluate (once, cached) ---------- */
+  function evaluate() {
+    const unlocks = loadUnlocks();
+    const newlyUnlocked = [];
+    const results = ACHIEVEMENTS.map(a => {
+      let rec = unlocks.find(u => u.achievementId === a.id);
+      const r = a.check();
+      if (rec && rec.unlockedAt) {
+        return { def: a, unlocked: true, unlockedAt: rec.unlockedAt, current: r.current, target: r.target };
+      }
+      if (r.unlocked) {
+        const now = new Date().toISOString();
+        if (rec) rec.unlockedAt = now; else { rec = { achievementId: a.id, unlockedAt: now, manual: false }; unlocks.push(rec); }
+        newlyUnlocked.push(a);
+        return { def: a, unlocked: true, unlockedAt: now, current: r.current, target: r.target };
+      }
+      return { def: a, unlocked: false, unlockedAt: null, current: r.current, target: r.target };
+    });
+    if (newlyUnlocked.length) saveUnlocks(unlocks);
+    return { results, newlyUnlocked };
+  }
+
+  function relTime(iso) {
+    const days = Math.floor((startOfDay(new Date()) - startOfDay(new Date(iso))) / 86400000);
+    if (days <= 0) return 'heute';
+    if (days === 1) return 'gestern';
+    return 'vor ' + days + ' Tagen';
+  }
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    return d.getDate() + '. ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  function rankFor(total) {
+    if (total >= 9) return { icon: '🏆', name: 'Legende' };
+    if (total >= 6) return { icon: '⚡', name: 'Champion' };
+    if (total >= 3) return { icon: '🔥', name: 'Grinder' };
+    return { icon: '🌱', name: 'Anfänger' };
+  }
+
+  /* ---------- confetti ---------- */
+  function burstConfetti(color) {
+    const colors = [color, '#C9A227', '#F2EFE6', '#E0785C', '#9C8CE0'];
+    for (let i = 0; i < 36; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.left = (Math.random() * 100) + 'vw';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDuration = (1.3 + Math.random() * 0.9) + 's';
+      el.style.animationDelay = (Math.random() * 0.3) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2600);
+    }
+  }
+
+  /* ---------- render ---------- */
+  function unlockedItems(results) {
+    const auto = results.filter(r => r.unlocked).map(r => ({
+      id: r.def.id, icon: r.def.icon, title: r.def.title, color: r.def.color, unlockedAt: r.unlockedAt, manual: false
+    }));
+    const manual = loadManual().map(m => ({ id: m.id, icon: m.icon, title: m.title, color: m.color, unlockedAt: m.unlockedAt, manual: true }));
+    return auto.concat(manual).sort((a, b) => (b.unlockedAt || '').localeCompare(a.unlockedAt || ''));
+  }
+
+  function render() {
+    const { results, newlyUnlocked } = evaluate();
+    const unlocked = unlockedItems(results);
+    const manualCount = loadManual().length;
+    const autoUnlockedCount = results.filter(r => r.unlocked).length;
+
+    $('rankBadge').textContent = (function () { const r = rankFor(autoUnlockedCount + manualCount); return r.icon + ' ' + r.name; })();
+    $('progressBadge').textContent = autoUnlockedCount + ' / ' + ACHIEVEMENTS.length + (manualCount ? ' + ' + manualCount + ' manuell' : '');
+
+    // Hero — most recently unlocked achievement overall.
+    const heroWrap = $('heroWrap');
+    if (!unlocked.length) {
+      heroWrap.innerHTML = '';
+    } else {
+      const top = unlocked[0];
+      heroWrap.innerHTML =
+        '<div class="hero" style="--c:' + top.color + '">'
+        + '<span class="sparkle" style="top:14px; left:12%;">✦</span>'
+        + '<span class="sparkle" style="top:30px; right:16%; font-size:10px;">✧</span>'
+        + '<span class="sparkle" style="bottom:18px; left:22%; font-size:10px;">✦</span>'
+        + '<span class="sparkle" style="bottom:24px; right:10%;">✧</span>'
+        + '<div class="hero-tag">🎉 Neuer Meilenstein!</div>'
+        + '<div class="hero-icon">' + escapeHtml(top.icon) + '</div>'
+        + '<div class="hero-title">' + escapeHtml(top.title) + '</div>'
+        + '<div class="hero-sub">Freigeschaltet ' + relTime(top.unlockedAt) + ' · dranbleiben zahlt sich aus</div>'
+        + '</div>';
+    }
+
+    // Newly unlocked (last 7 days)
+    const recentCutoff = new Date(); recentCutoff.setDate(recentCutoff.getDate() - 7);
+    const recent = unlocked.filter(u => new Date(u.unlockedAt) >= recentCutoff);
+    $('newSection').style.display = recent.length ? '' : 'none';
+    $('newRow').innerHTML = recent.map(u =>
+      '<div class="new-badge" style="--c:' + u.color + '"><span class="new-tag">Neu</span><div class="icon">' + escapeHtml(u.icon) + '</div><div class="t">' + escapeHtml(u.title) + '</div><div class="d">' + relTime(u.unlockedAt) + '</div></div>'
+    ).join('');
+
+    // Unlocked grid
+    const ug = $('unlockedGrid');
+    ug.innerHTML = unlocked.map(u =>
+      '<div class="badge unlocked" style="--c:' + u.color + '">'
+      + (u.manual ? '<span class="manual-tag">manuell</span>' : '')
+      + '<span class="icon">' + escapeHtml(u.icon) + '</span>'
+      + '<div class="t">' + escapeHtml(u.title) + '</div>'
+      + '<div class="date">' + fmtDate(u.unlockedAt) + '</div>'
+      + '</div>'
+    ).join('') + '<button type="button" class="badge add-tile" id="addManualTile"><span class="icon">＋</span>Eigenes Achievement</button>';
+    $('addManualTile').addEventListener('click', () => {
+      $('manualForm').classList.toggle('open');
+      if ($('manualForm').classList.contains('open')) $('manTitle').focus();
+    });
+
+    // Locked grid
+    const locked = results.filter(r => !r.unlocked);
+    $('lockedSection').style.display = locked.length ? '' : 'none';
+    $('lockedGrid').innerHTML = locked.length ? locked.map(r => {
+      const pct = r.target > 0 ? Math.min(100, (r.current / r.target) * 100) : 0;
+      const close = pct >= 75;
+      return '<div class="badge locked" style="--c:' + r.def.color + '">'
+        + (close ? '<span class="close-tag">Fast geschafft!</span>' : '')
+        + '<span class="icon">' + escapeHtml(r.def.icon) + '</span>'
+        + '<div class="t">' + escapeHtml(r.def.title) + '</div>'
+        + '<div class="prog-label">' + r.def.fmt(r.current, r.target) + '</div>'
+        + '<div class="prog-track"><div class="prog-fill" style="width:' + pct.toFixed(0) + '%"></div></div>'
+        + '</div>';
+    }).join('') : '<div class="empty-state">Alles freigeschaltet — starkes Jahr.</div>';
+
+    if (newlyUnlocked.length && unlocked.length) {
+      setTimeout(() => burstConfetti(unlocked[0].color), 150);
+    }
+  }
+
+  /* ---------- manual add form ---------- */
+  const SWATCHES = ['var(--rose)', 'var(--gold)', 'var(--mint)', 'var(--blue)', 'var(--violet)', 'var(--peach)', 'var(--orange)', 'var(--teal)', 'var(--brown)', 'var(--red)'];
+  let selectedColor = SWATCHES[0];
+  function renderSwatches() {
+    $('colorSwatches').innerHTML = SWATCHES.map(c =>
+      '<button type="button" class="color-swatch' + (c === selectedColor ? ' selected' : '') + '" style="background:' + c + '" data-c="' + c + '"></button>'
+    ).join('');
+    $('colorSwatches').querySelectorAll('.color-swatch').forEach(b => {
+      b.addEventListener('click', () => { selectedColor = b.dataset.c; renderSwatches(); });
+    });
+  }
+  renderSwatches();
+  $('manDate').value = new Date().toISOString().slice(0, 10);
+  $('manCancel').addEventListener('click', resetManualForm);
+  function resetManualForm() {
+    $('manualForm').classList.remove('open');
+    $('manEmoji').value = ''; $('manTitle').value = '';
+    $('manDate').value = new Date().toISOString().slice(0, 10);
+  }
+  $('manSave').addEventListener('click', () => {
+    const title = $('manTitle').value.trim();
+    if (!title) { $('manTitle').focus(); return; }
+    const list = loadManual();
+    list.push({
+      id: uid(), manual: true,
+      icon: $('manEmoji').value.trim() || '🏅',
+      title: title, color: selectedColor,
+      unlockedAt: $('manDate').value ? new Date($('manDate').value + 'T12:00:00').toISOString() : new Date().toISOString()
+    });
+    saveManual(list);
+    resetManualForm();
+    render();
+  });
+
+  render();
+
+  if (window.initCloudSync) {
+    window.initCloudSync({ appKey: 'achievements', syncedKeys: [UNLOCKS_KEY, MANUAL_KEY], onApplied: render });
+  }
+})();
+</script>
+</body>
+</html>

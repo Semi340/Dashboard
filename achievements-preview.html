@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vorschau · Achievements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text-primary: #F2EFE6;
+  --text-secondary: #ABA79A;
+  --text-tertiary: #6F6C61;
+  --gold: #C9A227;
+  --rose: #D98BA5;
+  --orange: #E0785C;
+  --violet: #9C8CE0;
+  --teal: #5AC8B0;
+  --blue: #4FA3E0;
+  --red: #E0524A;
+  --font-display: "Zilla Slab", Georgia, serif;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:#0A0C0B; color:var(--text-secondary); font-family:var(--font); -webkit-font-smoothing:antialiased; }
+body { min-height:100vh; padding:32px 20px 60px; position:relative; }
+body::before {
+  content:''; position:fixed; inset:0;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px),
+    radial-gradient(circle at 85% 0%, rgba(201,162,39,0.10), transparent 55%);
+  pointer-events:none; z-index:-1;
+}
+.page { max-width: 760px; margin:0 auto; }
+.header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.htitle { display:flex; align-items:center; gap:12px; }
+.header-emoji { font-size:28px; }
+h1 { font-family:var(--font-display); font-weight:700; letter-spacing:-0.01em; color:var(--text-primary); font-size:27px; margin:0; }
+.head-right { display:flex; align-items:center; gap:8px; }
+.rank-badge { font-family:var(--font-mono); font-size:12px; color:var(--text-primary); background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); padding:6px 12px; border-radius:999px; }
+.progress-badge { font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--gold); background:rgba(201,162,39,0.14); border:1px solid rgba(201,162,39,0.35); padding:6px 16px; border-radius:999px; }
+.sub { font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 22px; }
+
+.hero { position:relative; overflow:hidden; border-radius:20px; padding:28px 26px; margin-bottom:28px; text-align:center; background: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--c) 30%, transparent), transparent 65%), rgba(255,255,255,0.045); border:1px solid color-mix(in srgb, var(--c) 45%, transparent); box-shadow: 0 0 50px color-mix(in srgb, var(--c) 25%, transparent), 0 20px 50px rgba(0,0,0,0.4); }
+.hero .sparkle { position:absolute; font-size:14px; opacity:0.35; }
+.hero-tag { font-family:var(--font-mono); font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--c); margin-bottom:10px; }
+.hero-icon { font-size:52px; margin-bottom:10px; }
+.hero-title { font-family:var(--font-display); font-size:23px; font-weight:700; color:var(--text-primary); margin-bottom:6px; }
+.hero-sub { font-family:var(--font-mono); font-size:12px; color:var(--text-tertiary); }
+
+.section-label { font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 10px; display:flex; align-items:center; gap:7px; }
+.section-label .line { flex:1; height:1px; background:rgba(255,255,255,0.08); }
+
+.new-row { display:flex; gap:12px; overflow-x:auto; margin-bottom:28px; padding-bottom:4px; }
+.new-badge { flex:none; width:140px; text-align:center; padding:18px 12px; border-radius:16px; background: radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--c) 30%, transparent), transparent 70%), rgba(255,255,255,0.05); border:1px solid var(--c); box-shadow: 0 0 24px color-mix(in srgb, var(--c) 35%, transparent), 0 14px 34px rgba(0,0,0,0.35); }
+.new-badge .icon { font-size:32px; margin-bottom:8px; }
+.new-badge .t { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:3px; }
+.new-badge .d { font-family:var(--font-mono); font-size:9.5px; color:var(--c); }
+.new-tag { display:inline-block; font-family:var(--font-mono); font-size:8.5px; letter-spacing:0.1em; text-transform:uppercase; color:#0A0C0B; background:var(--c); padding:2px 7px; border-radius:999px; margin-bottom:8px; }
+
+.grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:28px; }
+@media (max-width:560px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+
+.badge { border-radius:16px; padding:16px 14px; text-align:center; box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+.badge.unlocked { background: radial-gradient(circle at 85% -10%, color-mix(in srgb, var(--c) 20%, transparent), transparent 60%), rgba(255,255,255,0.04); border:1px solid color-mix(in srgb, var(--c) 45%, transparent); border-top:2px solid var(--c); }
+.badge.locked { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); opacity:0.65; }
+.badge .icon { font-size:28px; margin-bottom:8px; display:block; }
+.badge.locked .icon { filter: grayscale(1); opacity:0.5; }
+.badge .t { font-family:var(--font-display); font-size:13.5px; font-weight:700; color:var(--text-primary); margin-bottom:4px; line-height:1.2; }
+.badge.unlocked .date { font-family:var(--font-mono); font-size:9.5px; color:var(--c); }
+.badge.locked .prog-label { font-family:var(--font-mono); font-size:9.5px; color:var(--text-tertiary); margin-bottom:5px; }
+.prog-track { height:5px; border-radius:3px; background:rgba(255,255,255,0.08); overflow:hidden; }
+.prog-fill { height:100%; background:var(--c); border-radius:3px; }
+.close-tag { display:inline-block; font-family:var(--font-mono); font-size:8px; letter-spacing:0.08em; text-transform:uppercase; color:#0A0C0B; background:var(--c); padding:2px 7px; border-radius:999px; margin-bottom:7px; }
+.manual-tag { position:absolute; top:8px; right:8px; font-family:var(--font-mono); font-size:7.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-tertiary); background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:999px; }
+.badge { position:relative; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="htitle"><span class="header-emoji">🏆</span><h1>Achievements</h1></div>
+    <div class="head-right">
+      <span class="rank-badge">🔥 Grinder</span>
+      <span class="progress-badge">5 / 9 + 1 manuell</span>
+    </div>
+  </div>
+  <p class="sub">Automatisch berechnet + manuell ergänzbar</p>
+
+  <div class="hero" style="--c:var(--rose)">
+    <span class="sparkle" style="top:14px; left:12%;">✦</span>
+    <span class="sparkle" style="top:30px; right:16%; font-size:10px;">✧</span>
+    <span class="sparkle" style="bottom:18px; left:22%; font-size:10px;">✦</span>
+    <span class="sparkle" style="bottom:24px; right:10%;">✧</span>
+    <div class="hero-tag">🎉 Neuer Meilenstein!</div>
+    <div class="hero-icon">🔥</div>
+    <div class="hero-title">30-Tage-Streak</div>
+    <div class="hero-sub">Freigeschaltet gestern · dranbleiben zahlt sich aus</div>
+  </div>
+
+  <div class="section-label">Neu freigeschaltet<span class="line"></span></div>
+  <div class="new-row">
+    <div class="new-badge" style="--c:var(--orange)"><span class="new-tag">Neu</span><div class="icon">🏋</div><div class="t">100kg Bankdrücken</div><div class="d">vor 2 Tagen</div></div>
+    <div class="new-badge" style="--c:var(--rose)"><span class="new-tag">Neu</span><div class="icon">🔥</div><div class="t">30-Tage-Streak</div><div class="d">gestern</div></div>
+  </div>
+
+  <div class="section-label">Freigeschaltet<span class="line"></span></div>
+  <div class="grid">
+    <div class="badge unlocked" style="--c:var(--orange)"><span class="icon">🏋</span><div class="t">100kg Bankdrücken</div><div class="date">14. Aug 2026</div></div>
+    <div class="badge unlocked" style="--c:var(--rose)"><span class="icon">🔥</span><div class="t">30-Tage-Streak</div><div class="date">29. Aug 2026</div></div>
+    <div class="badge unlocked" style="--c:var(--violet)"><span class="icon">📚</span><div class="t">50h Learning</div><div class="date">2. Aug 2026</div></div>
+    <div class="badge unlocked" style="--c:var(--red)"><span class="icon">🥊</span><div class="t">10 Box-Sessions</div><div class="date">20. Aug 2026</div></div>
+    <div class="badge unlocked" style="--c:var(--mint)"><span class="manual-tag">manuell</span><span class="icon">🏃</span><div class="t">Erster Halbmarathon</div><div class="date">3. Jul 2026</div></div>
+    <div class="badge" style="--c:var(--text-tertiary); background:rgba(255,255,255,0.02); border:1px dashed rgba(255,255,255,0.15); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
+      <span class="icon" style="filter:none; opacity:0.6;">＋</span><div class="t" style="color:var(--text-tertiary)">Eigenes Achievement</div>
+    </div>
+  </div>
+
+  <div class="section-label">Noch gesperrt<span class="line"></span></div>
+  <div class="grid">
+    <div class="badge locked" style="--c:var(--rose)">
+      <span class="close-tag">Fast geschafft!</span>
+      <span class="icon">📇</span><div class="t">500 LinkedIn-Connections</div>
+      <div class="prog-label">120 / 500</div>
+      <div class="prog-track"><div class="prog-fill" style="width:24%"></div></div>
+    </div>
+    <div class="badge locked" style="--c:var(--gold)">
+      <span class="close-tag">Fast geschafft!</span>
+      <span class="icon">💰</span><div class="t">10.000€ Net Worth</div>
+      <div class="prog-label">8.400 / 10.000€</div>
+      <div class="prog-track"><div class="prog-fill" style="width:84%"></div></div>
+    </div>
+    <div class="badge locked" style="--c:var(--teal)">
+      <span class="icon">📆</span><div class="t">12 Wochenrückblicke</div>
+      <div class="prog-label">5 / 12</div>
+      <div class="prog-track"><div class="prog-fill" style="width:42%"></div></div>
+    </div>
+    <div class="badge locked" style="--c:var(--blue)">
+      <span class="close-tag">Fast geschafft!</span>
+      <span class="icon">💧</span><div class="t">30 Tage Wasserziel</div>
+      <div class="prog-label">27 / 30</div>
+      <div class="prog-track"><div class="prog-fill" style="width:90%"></div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
