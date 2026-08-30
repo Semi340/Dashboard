@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vorschau · Learning-Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text-primary: #F2EFE6;
+  --text-secondary: #ABA79A;
+  --text-tertiary: #6F6C61;
+  --gold: #C9A227;
+  --blue: #4FA3E0;
+  --red: #E0524A;
+  --orange: #E0785C;
+  --mint: #6FE3A0;
+  --brown: #C9A36B;
+  --violet: #9C8CE0;
+  --font-display: "Zilla Slab", Georgia, serif;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:#0A0C0B; color:var(--text-secondary); font-family:var(--font); -webkit-font-smoothing:antialiased; }
+body { min-height:100vh; padding:32px 20px 60px; position:relative; }
+body::before {
+  content:''; position:fixed; inset:0;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px),
+    radial-gradient(circle at 85% 0%, rgba(156,140,224,0.10), transparent 55%);
+  pointer-events:none; z-index:-1;
+}
+.page { max-width: 720px; margin:0 auto; }
+
+.header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+.header-emoji { font-size:28px; line-height:1; }
+h1 { font-family:var(--font-display); font-weight:700; letter-spacing:-0.01em; color:var(--text-primary); font-size:27px; margin:0; }
+.sub { font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 26px; }
+
+.section-label {
+  font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase;
+  color:var(--text-tertiary); margin:0 0 10px; display:flex; align-items:center; gap:7px;
+}
+.section-label .line { flex:1; height:1px; background:rgba(255,255,255,0.08); }
+
+.cats { display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:28px; }
+.cat-chip {
+  flex:none; display:flex; align-items:center; gap:8px;
+  padding:9px 15px; border-radius:999px;
+  background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.09);
+  font-size:13.5px; color:var(--text-secondary); cursor:pointer; white-space:nowrap;
+}
+.cat-chip .emoji { font-size:15px; }
+.cat-chip.active {
+  border-color: var(--dot);
+  background: color-mix(in srgb, var(--dot) 18%, transparent);
+  color:var(--text-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--dot) 45%, transparent);
+}
+.cat-add { border-style:dashed; color:var(--text-tertiary); }
+
+.card {
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px; padding:18px; margin-bottom:28px;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+}
+.row { display:flex; gap:8px; margin-bottom:12px; }
+.chip-sm {
+  padding:7px 13px; border-radius:8px; background:rgba(255,255,255,0.045);
+  border:1px solid rgba(255,255,255,0.09); font-family:var(--font-mono);
+  font-size:12px; color:var(--text-secondary);
+}
+.chip-sm.active { border-color:var(--violet); color:var(--text-primary); background:color-mix(in srgb, var(--violet) 14%, transparent); }
+input, textarea {
+  width:100%; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.09);
+  border-radius:9px; padding:11px 13px; color:var(--text-primary); font-family:var(--font); font-size:14px;
+}
+textarea { margin-top:2px; }
+.save-btn {
+  margin-top:12px; width:100%; padding:12px; border-radius:9px; border:none;
+  font-weight:700; font-family:var(--font-display); font-size:15px; cursor:pointer;
+  background:var(--violet); color:#0A0C0B; letter-spacing:0.01em;
+}
+
+.stat-row { display:flex; gap:10px; margin-bottom:22px; }
+.stat {
+  flex:1; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px; padding:14px 10px; text-align:center;
+}
+.stat-emoji { font-size:17px; margin-bottom:2px; }
+.stat-label { font-size:10px; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:3px; }
+.stat-value { font-family:var(--font-mono); font-size:19px; font-weight:600; color:var(--text-primary); }
+
+.bars { display:flex; flex-direction:column; gap:9px; margin-bottom:30px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:14px 16px; }
+.bar-row { display:flex; align-items:center; gap:10px; font-size:12.5px; }
+.bar-label { width:98px; flex:none; color:var(--text-secondary); display:flex; align-items:center; gap:6px; }
+.bar-track { flex:1; height:7px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:hidden; }
+.bar-fill { height:100%; border-radius:4px; }
+.bar-min { width:42px; flex:none; text-align:right; font-family:var(--font-mono); color:var(--text-tertiary); }
+
+.day-group { margin-bottom:18px; }
+.day-label { font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); margin-bottom:7px; text-transform:uppercase; letter-spacing:0.08em; }
+.entry {
+  display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:11px;
+  background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); margin-bottom:7px;
+}
+.entry-emoji { font-size:16px; flex:none; }
+.entry-pill { flex:none; font-size:11px; padding:3px 10px; border-radius:999px; font-weight:600; }
+.entry-note { flex:1; font-size:13px; color:var(--text-secondary); }
+.entry-min { font-family:var(--font-mono); font-size:12px; color:var(--text-tertiary); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header"><span class="header-emoji">📚</span><h1>Learning</h1></div>
+  <p class="sub">Frei verwaltbare Kategorien</p>
+
+  <div class="cats">
+    <div class="cat-chip active" style="--dot:var(--violet)"><span class="emoji">🏠</span>Immobilien</div>
+    <div class="cat-chip" style="--dot:var(--blue)"><span class="emoji">📈</span>Trading</div>
+    <div class="cat-chip" style="--dot:var(--mint)"><span class="emoji">🤖</span>KI</div>
+    <div class="cat-chip" style="--dot:var(--gold)"><span class="emoji">🗣️</span>Sprachen</div>
+    <div class="cat-chip cat-add">+ Kategorie</div>
+  </div>
+
+  <div class="section-label">Neuer Eintrag<span class="line"></span></div>
+  <div class="card">
+    <div class="row">
+      <div class="chip-sm">15 Min</div>
+      <div class="chip-sm active">30 Min</div>
+      <div class="chip-sm">60 Min</div>
+      <div class="chip-sm">90 Min</div>
+      <input style="max-width:90px" placeholder="Min." value="30">
+    </div>
+    <textarea rows="2" placeholder="Notiz: was gelernt / erkannt?">Marktzyklen-Video zu Zinsen & Immobilienpreisen angeschaut</textarea>
+    <button class="save-btn">🏠 Eintrag speichern · Immobilien</button>
+  </div>
+
+  <div class="section-label">Übersicht<span class="line"></span></div>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-emoji">⏱️</div><div class="stat-label">Woche</div><div class="stat-value">4.5h</div></div>
+    <div class="stat"><div class="stat-emoji">📅</div><div class="stat-label">Monat</div><div class="stat-value">18h</div></div>
+    <div class="stat"><div class="stat-emoji">🗂️</div><div class="stat-label">Kategorien</div><div class="stat-value">4</div></div>
+  </div>
+
+  <div class="bars">
+    <div class="bar-row"><span class="bar-label">🏠 Immobilien</span><div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--violet)"></div></div><span class="bar-min">120m</span></div>
+    <div class="bar-row"><span class="bar-label">📈 Trading</span><div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--blue)"></div></div><span class="bar-min">75m</span></div>
+    <div class="bar-row"><span class="bar-label">🤖 KI</span><div class="bar-track"><div class="bar-fill" style="width:55%;background:var(--mint)"></div></div><span class="bar-min">90m</span></div>
+    <div class="bar-row"><span class="bar-label">🗣️ Sprachen</span><div class="bar-track"><div class="bar-fill" style="width:20%;background:var(--gold)"></div></div><span class="bar-min">30m</span></div>
+  </div>
+
+  <div class="section-label">Verlauf<span class="line"></span></div>
+  <div class="day-group">
+    <div class="day-label">Heute</div>
+    <div class="entry">
+      <span class="entry-emoji">🏠</span>
+      <span class="entry-pill" style="background:color-mix(in srgb, var(--violet) 20%, transparent); color:var(--violet)">Immobilien</span>
+      <span class="entry-note">Marktzyklen-Video zu Zinsen angeschaut</span>
+      <span class="entry-min">30m</span>
+    </div>
+    <div class="entry">
+      <span class="entry-emoji">🤖</span>
+      <span class="entry-pill" style="background:color-mix(in srgb, var(--mint) 20%, transparent); color:var(--mint)">KI</span>
+      <span class="entry-note">Artikel über RAG-Systeme gelesen</span>
+      <span class="entry-min">45m</span>
+    </div>
+  </div>
+  <div class="day-group">
+    <div class="day-label">Gestern</div>
+    <div class="entry">
+      <span class="entry-emoji">📈</span>
+      <span class="entry-pill" style="background:color-mix(in srgb, var(--blue) 20%, transparent); color:var(--blue)">Trading</span>
+      <span class="entry-note">Backtesting-Strategie überarbeitet</span>
+      <span class="entry-min">75m</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
