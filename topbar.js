@@ -198,7 +198,7 @@ body.topbar-modal-open {
   const topbarHtml = `
 <header class="topbar" id="topbar" role="navigation" aria-label="Quick actions">
   <div class="topbar-water-wrap">
-    <a href="health.html#water" class="topbar-water-pill" id="topbarWater" aria-label="Water progress">
+    <a href="intake.html#water" class="topbar-water-pill" id="topbarWater" aria-label="Water progress">
       <span class="topbar-pill-dot"></span>
       <span class="topbar-pill-count" id="topbarWaterCount">0/0</span>
     </a>

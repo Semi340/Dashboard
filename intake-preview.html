@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vorschau · Intake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text-primary: #F2EFE6;
+  --text-secondary: #ABA79A;
+  --text-tertiary: #6F6C61;
+  --blue: #4FA3E0;
+  --brown: #C9A36B;
+  --peach: #E3A17E;
+  --font-display: "Zilla Slab", Georgia, serif;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:#0A0C0B; color:var(--text-secondary); font-family:var(--font); -webkit-font-smoothing:antialiased; }
+body { min-height:100vh; padding:32px 20px 60px; position:relative; }
+body::before {
+  content:''; position:fixed; inset:0;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px),
+    radial-gradient(circle at 85% 0%, rgba(227,161,126,0.10), transparent 55%);
+  pointer-events:none; z-index:-1;
+}
+.page { max-width: 720px; margin:0 auto; }
+.header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+.header-emoji { font-size:28px; }
+h1 { font-family:var(--font-display); font-weight:700; letter-spacing:-0.01em; color:var(--text-primary); font-size:27px; margin:0; }
+.sub { font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 26px; }
+
+.section-label { font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 10px; display:flex; align-items:center; gap:7px; }
+.section-label .line { flex:1; height:1px; background:rgba(255,255,255,0.08); }
+
+.stat-row { display:flex; gap:10px; margin-bottom:26px; }
+.stat { flex:1; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:13px 10px; text-align:center; }
+.stat-emoji { font-size:16px; margin-bottom:2px; }
+.stat-label { font-size:10px; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-tertiary); margin-bottom:3px; }
+.stat-value { font-family:var(--font-mono); font-size:18px; font-weight:600; }
+.stat-water .stat-value { color:var(--blue); }
+.stat-caf .stat-value { color:var(--brown); }
+.stat-food .stat-value { color:var(--peach); }
+
+.tabs { display:flex; gap:6px; margin-bottom:22px; background:rgba(255,255,255,0.03); border-radius:12px; padding:4px; }
+.tab { flex:1; text-align:center; padding:10px 8px; font-size:13px; color:var(--text-tertiary); border-radius:9px; cursor:pointer; }
+.tab .emoji { margin-right:5px; }
+.tab.active-food { color:#0A0C0B; background:var(--peach); font-weight:600; }
+
+.card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px; margin-bottom:22px; box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+.card-title { font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--text-primary); margin:0 0 12px; display:flex; align-items:baseline; gap:8px; }
+.card-title .kcal { margin-left:auto; font-family:var(--font-mono); font-size:20px; color:var(--peach); }
+
+.macro-row { display:flex; gap:8px; margin-bottom:16px; }
+.macro { flex:1; text-align:center; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:9px; padding:9px 6px; }
+.macro-emoji { font-size:14px; }
+.macro-val { font-family:var(--font-mono); font-size:14px; color:var(--text-primary); font-weight:600; margin-top:2px; }
+.macro-label { font-size:9px; color:var(--text-tertiary); letter-spacing:0.05em; text-transform:uppercase; margin-top:1px; }
+
+.form-row { display:flex; gap:8px; margin-bottom:10px; }
+input { background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.09); border-radius:9px; padding:10px 12px; color:var(--text-primary); font-family:var(--font); font-size:13.5px; }
+.input-name { flex:1; }
+.input-kcal { width:80px; }
+.nutrient-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-bottom:12px; }
+.nutrient-grid input { width:100%; text-align:center; font-family:var(--font-mono); font-size:12.5px; padding:8px 4px; }
+.nutrient-label { font-size:9px; color:var(--text-tertiary); text-align:center; margin-top:3px; }
+.add-btn { width:100%; padding:11px; border-radius:9px; border:none; font-weight:700; font-family:var(--font-display); font-size:14.5px; cursor:pointer; background:var(--peach); color:#0A0C0B; }
+
+.day-label { font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); margin-bottom:7px; text-transform:uppercase; letter-spacing:0.08em; }
+.log-row { padding:11px 13px; border-radius:11px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); margin-bottom:7px; }
+.log-top { display:flex; align-items:center; gap:10px; }
+.log-time { font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); width:38px; flex:none; }
+.log-note { flex:1; font-size:13px; color:var(--text-secondary); }
+.log-kcal { font-family:var(--font-mono); font-size:12.5px; color:var(--peach); font-weight:600; }
+.log-macros { margin:5px 0 0 48px; font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header"><span class="header-emoji">🧃</span><h1>Intake</h1></div>
+  <p class="sub">Wasser · Koffein · Essen</p>
+
+  <div class="stat-row">
+    <div class="stat stat-water"><div class="stat-emoji">💧</div><div class="stat-label">Wasser</div><div class="stat-value">1.8/2.5L</div></div>
+    <div class="stat stat-caf"><div class="stat-emoji">☕</div><div class="stat-label">Koffein</div><div class="stat-value">180mg</div></div>
+    <div class="stat stat-food"><div class="stat-emoji">🍽️</div><div class="stat-label">Kalorien</div><div class="stat-value">1420</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab"><span class="emoji">💧</span>Wasser</div>
+    <div class="tab"><span class="emoji">☕</span>Koffein</div>
+    <div class="tab active-food"><span class="emoji">🍽️</span>Essen</div>
+  </div>
+
+  <div class="section-label">Nährwerte heute<span class="line"></span></div>
+  <div class="macro-row">
+    <div class="macro"><div class="macro-emoji">🥩</div><div class="macro-val">78g</div><div class="macro-label">Protein</div></div>
+    <div class="macro"><div class="macro-emoji">🍚</div><div class="macro-val">142g</div><div class="macro-label">Kohlenh.</div></div>
+    <div class="macro"><div class="macro-emoji">🍬</div><div class="macro-val">34g</div><div class="macro-label">Zucker</div></div>
+    <div class="macro"><div class="macro-emoji">🥑</div><div class="macro-val">46g</div><div class="macro-label">Fett</div></div>
+  </div>
+
+  <div class="section-label">Neuer Eintrag<span class="line"></span></div>
+  <div class="card">
+    <div class="form-row">
+      <input class="input-name" placeholder="Was hast du gegessen?" value="Hähnchen mit Reis">
+      <input class="input-kcal" placeholder="kcal" value="520">
+    </div>
+    <div class="nutrient-grid">
+      <div><input placeholder="0" value="42"><div class="nutrient-label">🥩 Protein g</div></div>
+      <div><input placeholder="0" value="60"><div class="nutrient-label">🍚 Kohlenh. g</div></div>
+      <div><input placeholder="0" value="4"><div class="nutrient-label">🍬 Zucker g</div></div>
+      <div><input placeholder="0" value="12"><div class="nutrient-label">🥑 Fett g</div></div>
+    </div>
+    <button class="add-btn">🍽️ Eintrag speichern</button>
+  </div>
+
+  <div class="section-label">Verlauf<span class="line"></span></div>
+  <div class="day-label">Heute</div>
+  <div class="log-row">
+    <div class="log-top">
+      <span class="log-time">19:10</span>
+      <span class="log-note">🍽️ Hähnchen mit Reis</span>
+      <span class="log-kcal">520 kcal</span>
+    </div>
+    <div class="log-macros">P 42g · K 60g · davon Z 4g · F 12g</div>
+  </div>
+  <div class="log-row">
+    <div class="log-top">
+      <span class="log-time">09:30</span>
+      <span class="log-note">🍽️ Haferflocken mit Banane</span>
+      <span class="log-kcal">420 kcal</span>
+    </div>
+    <div class="log-macros">P 14g · K 68g · davon Z 22g · F 8g</div>
+  </div>
+</div>
+</body>
+</html>
