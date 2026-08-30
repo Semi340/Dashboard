@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="lock.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A0C0B">
+<title>Reflection · Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sync.js" defer></script>
+<script src="topbar.js" defer></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text-primary: #F2EFE6;
+  --text-secondary: #ABA79A;
+  --text-tertiary: #6F6C61;
+  --gold: #C9A227;
+  --gold-dim: #7A611A;
+  --blue: #4FA3E0;
+  --red: #E0524A;
+  --orange: #E0785C;
+  --mint: #6FE3A0;
+  --brown: #C9A36B;
+  --violet: #9C8CE0;
+  --peach: #E3A17E;
+  --teal: #5AC8B0;
+  --success: var(--mint);
+  --warning: var(--gold);
+  --danger:  var(--red);
+  --c: var(--teal);
+  --font-display: "Zilla Slab", Georgia, "Times New Roman", serif;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: #0A0C0B;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  min-height: 100vh; position: relative; overflow-x: hidden;
+  padding: max(28px, env(safe-area-inset-top)) 20px calc(80px + env(safe-area-inset-bottom));
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px),
+    radial-gradient(circle at 85% 0%, rgba(90,200,176,0.10), transparent 55%);
+  pointer-events: none; z-index: -2;
+}
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.014) 1px, transparent 1px);
+  background-size: 3px 3px; pointer-events: none; z-index: -1;
+}
+.page { max-width: 760px; margin: 0 auto; }
+
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.header-emoji { font-size: 28px; }
+h1 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); font-size: 27px; margin: 0; }
+.sub { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-tertiary); margin: 0 0 8px; }
+.hint { font-size: 11.5px; color: var(--text-tertiary); margin: 0 0 22px; }
+
+.section-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-tertiary); margin: 0 0 10px; display: flex; align-items: center; gap: 7px; }
+.section-label .line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+
+.tabs { display: flex; gap: 6px; margin-bottom: 22px; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 4px; }
+.tab { flex: 1; text-align: center; padding: 10px 8px; font-size: 13px; color: var(--text-tertiary); border-radius: 9px; cursor: pointer; border: 0; background: transparent; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.tab.active { color: #0A0C0B; background: var(--teal); font-weight: 600; }
+
+.card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+.period { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0 0 14px; }
+
+.auto-row { border-bottom: 1px solid rgba(255,255,255,0.05); }
+.auto-row:last-of-type { border-bottom: none; }
+.auto-row summary { list-style: none; cursor: pointer; padding: 9px 0; display: flex; align-items: center; gap: 10px; -webkit-tap-highlight-color: transparent; }
+.auto-row summary::-webkit-details-marker { display: none; }
+.auto-row-plain { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 9px 0; display: flex; align-items: center; gap: 10px; }
+.auto-row-plain:last-child { border-bottom: none; }
+.auto-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.auto-label { flex: 1; font-size: 13px; color: var(--text-secondary); }
+.auto-val { font-family: var(--font-mono); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.chevron { font-size: 10px; color: var(--text-tertiary); }
+.auto-detail { padding: 0 0 12px 18px; font-size: 12px; color: var(--text-tertiary); font-family: var(--font-mono); line-height: 1.9; }
+.empty-state { text-align: center; font-size: 12px; font-style: italic; color: var(--text-tertiary); padding: 14px 0; }
+
+.prompt { margin-top: 16px; }
+.prompt-label { font-size: 13px; color: var(--text-primary); margin-bottom: 7px; display: flex; align-items: center; gap: 7px; font-weight: 600; }
+textarea {
+  width: 100%; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 9px; padding: 11px 13px; color: var(--text-primary); font-family: var(--font); font-size: 13.5px; resize: vertical; outline: none;
+}
+textarea:focus { border-color: rgba(90,200,176,0.4); }
+.score-row { display: flex; gap: 5px; margin-top: 2px; }
+.score-dot { flex: 1; height: 26px; border-radius: 6px; background: rgba(255,255,255,0.06); border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.score-dot.filled { background: var(--teal); }
+.save-btn { margin-top: 16px; width: 100%; padding: 12px; border-radius: 9px; border: none; font-weight: 700; font-family: var(--font-display); font-size: 15px; cursor: pointer; background: var(--teal); color: #0A0C0B; }
+.save-btn:hover { filter: brightness(1.06); }
+.save-status { text-align: center; font-size: 11.5px; color: var(--teal); margin-top: 8px; min-height: 14px; }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; font-size: 11px; color: var(--text-tertiary); }
+.legend span.item { display: flex; align-items: center; gap: 5px; }
+.legend .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+.trend-row { display: flex; gap: 10px; margin-bottom: 4px; }
+.week-label-el { flex: 1; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px 10px; border-radius: 10px; border: 1px solid transparent; background: transparent; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.week-label-el.selected { border-color: rgba(90,200,176,0.4); background: rgba(90,200,176,0.06); }
+.stack { width: 100%; height: 64px; border-radius: 4px; overflow: hidden; display: flex; flex-direction: column-reverse; background: rgba(255,255,255,0.04); }
+.stack .seg { width: 100%; }
+.week-caption { font-family: var(--font-mono); font-size: 9px; color: var(--text-tertiary); }
+.week-score-el { font-family: var(--font-mono); font-size: 11px; color: var(--teal); font-weight: 600; }
+
+.panels { margin-top: 16px; margin-bottom: 30px; }
+.panel { background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; padding: 22px; box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 6px; }
+.panel-title { font-family: var(--font-display); font-size: 19px; font-weight: 700; color: var(--text-primary); }
+.panel-score { font-family: var(--font-mono); font-size: 15px; color: var(--teal); font-weight: 600; }
+
+.exploded { display: flex; gap: 14px; align-items: flex-end; height: 110px; margin-bottom: 22px; }
+.exp-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
+.exp-val { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+.exp-bar { width: 100%; border-radius: 5px 5px 0 0; min-height: 3px; }
+.exp-name { font-size: 11px; color: var(--text-tertiary); }
+
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .detail-grid { grid-template-columns: 1fr; } }
+.detail-card { border-left: 3px solid var(--c); background: rgba(255,255,255,0.03); border-radius: 0 10px 10px 0; padding: 14px 16px; }
+.detail-card h4 { margin: 0 0 8px; font-family: var(--font-display); font-size: 14.5px; font-weight: 700; color: var(--text-primary); }
+.detail-card p { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--text-secondary); }
+
+.archive-item { border-radius: 11px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 7px; overflow: hidden; }
+.archive-summary { list-style: none; cursor: pointer; padding: 11px 13px; display: flex; align-items: center; gap: 10px; -webkit-tap-highlight-color: transparent; }
+.archive-summary::-webkit-details-marker { display: none; }
+.archive-period { flex: 1; font-size: 13px; color: var(--text-secondary); }
+.archive-score { font-family: var(--font-mono); font-size: 12px; color: var(--teal); font-weight: 600; }
+.archive-dots { display: flex; gap: 4px; }
+.archive-dots .dot { width: 6px; height: 6px; border-radius: 50%; }
+.archive-body { padding: 4px 13px 14px; border-top: 1px solid rgba(255,255,255,0.05); }
+.archive-body .prompt-label { font-size: 12px; }
+.archive-body textarea { pointer-events: none; opacity: 0.85; }
+
+@media (max-width: 480px) {
+  body { padding: max(20px, env(safe-area-inset-top)) 14px calc(60px + env(safe-area-inset-bottom)); }
+  .card { padding: 14px; }
+  .panel { padding: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header"><span class="header-emoji">📖</span><h1>Reflection</h1></div>
+  <p class="sub">Wochen- & Monatsrückblick</p>
+  <p class="hint" id="hintText">Zeilen und Wochen-Balken sind anklickbar für Details.</p>
+
+  <div class="tabs" id="reflTabs">
+    <button class="tab" type="button" data-type="week">📅 Woche</button>
+    <button class="tab" type="button" data-type="month">🗓️ Monat</button>
+  </div>
+
+  <div class="card">
+    <div class="period" id="periodTitle">—</div>
+    <div class="section-label">Automatisch erfasst<span class="line"></span></div>
+    <div id="autoRows"></div>
+
+    <div class="prompt">
+      <div class="prompt-label">✅ <span id="goodLabel">Was lief gut diese Woche?</span></div>
+      <textarea id="goodInput" rows="2" placeholder="Was lief gut?"></textarea>
+    </div>
+    <div class="prompt">
+      <div class="prompt-label">🔧 Was kannst du verbessern?</div>
+      <textarea id="improveInput" rows="2" placeholder="Was kannst du verbessern?"></textarea>
+    </div>
+    <div class="prompt">
+      <div class="prompt-label">⭐ <span id="scoreLabel">Wie würdest du die Woche insgesamt bewerten?</span></div>
+      <div class="score-row" id="scoreRow"></div>
+    </div>
+    <button class="save-btn" id="saveBtn" type="button">Speichern</button>
+    <div class="save-status" id="saveStatus"></div>
+  </div>
+
+  <div id="trendSection">
+    <div class="section-label" id="trendLabel">Trend · letzte 4 Wochen<span class="line"></span></div>
+    <div class="legend" id="legend"></div>
+    <div class="trend-row" id="trendRow"></div>
+    <div class="panels" id="panels"></div>
+  </div>
+
+  <div class="section-label">Archiv<span class="line"></span></div>
+  <div id="archiveList"></div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+
+  /* ============ date / period helpers ============ */
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function toISO(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function parseISO(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+  function startOfDay(d) { const c = new Date(d); c.setHours(0, 0, 0, 0); return c; }
+  function endOfDay(d) { const c = new Date(d); c.setHours(23, 59, 59, 999); return c; }
+  function startOfWeek(d) { const day = (d.getDay() + 6) % 7; const s = startOfDay(d); s.setDate(s.getDate() - day); return s; }
+  function endOfWeek(d) { const s = startOfWeek(d); const e = new Date(s); e.setDate(s.getDate() + 6); return endOfDay(e); }
+  function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function endOfMonth(d) { return endOfDay(new Date(d.getFullYear(), d.getMonth() + 1, 0)); }
+  function periodFor(type, ref) { return type === 'week' ? { start: startOfWeek(ref), end: endOfWeek(ref) } : { start: startOfMonth(ref), end: endOfMonth(ref) }; }
+  function shiftRef(type, ref, delta) { const d = new Date(ref); if (type === 'week') d.setDate(d.getDate() + delta * 7); else d.setMonth(d.getMonth() + delta); return d; }
+  function isoWeekNum(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
+  const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const MONTHS_SHORT = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+  function periodTitle(type, p) {
+    if (type === 'month') return MONTHS[p.start.getMonth()] + ' ' + p.start.getFullYear();
+    if (p.start.getMonth() === p.end.getMonth()) return p.start.getDate() + '.–' + p.end.getDate() + '. ' + MONTHS[p.start.getMonth()];
+    return p.start.getDate() + '. ' + MONTHS_SHORT[p.start.getMonth()] + ' – ' + p.end.getDate() + '. ' + MONTHS_SHORT[p.end.getMonth()];
+  }
+  function trendCaption(type, p, isCurrent) {
+    if (isCurrent) return 'Aktuell';
+    if (type === 'week') return 'KW' + isoWeekNum(p.start);
+    return MONTHS_SHORT[p.start.getMonth()];
+  }
+
+  /* ============ auto-summary sources ============ */
+  function readJSON(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; } }
+  function inPeriod(d, ps, pe) { return d >= ps && d <= pe; }
+
+  function learningSummary(ps, pe) {
+    const entries = readJSON('learn:entries', []);
+    const cats = readJSON('learn:categories', []);
+    const rows = entries.filter(e => e && e.date && inPeriod(parseISO(e.date), ps, pe));
+    if (!rows.length) return null;
+    const byCat = {};
+    rows.forEach(e => { byCat[e.categoryId] = (byCat[e.categoryId] || 0) + (e.minutes || 0); });
+    const totalMin = rows.reduce((s, e) => s + (e.minutes || 0), 0);
+    const detail = Object.keys(byCat)
+      .map(cid => { const cat = (cats || []).find(c => c.id === cid); return { label: (cat ? (cat.emoji || '📌') + ' ' + cat.name : '📌 Sonstiges'), min: byCat[cid] }; })
+      .sort((a, b) => b.min - a.min)
+      .map(x => x.label + ' ' + (x.min / 60).toFixed(1) + 'h');
+    return { value: totalMin / 60, display: (totalMin / 60).toFixed(1) + 'h', detail };
+  }
+
+  function gymSummary(ps, pe) {
+    const state = readJSON('po_coach_v1', null);
+    if (!state || !Array.isArray(state.exercises)) return null;
+    const unit = state.units || 'kg';
+    const sessionDates = new Set();
+    const deltas = [];
+    state.exercises.forEach(ex => {
+      const logs = (state.logs[ex.id] || []).map(l => Object.assign({}, l, { d: new Date(l.date) })).sort((a, b) => a.d - b.d);
+      logs.forEach(l => { if (inPeriod(l.d, ps, pe)) sessionDates.add(toISO(l.d)); });
+      const before = logs.filter(l => l.d < ps);
+      const within = logs.filter(l => inPeriod(l.d, ps, pe));
+      if (!within.length) return;
+      if (ex.bw) {
+        if (!before.length) return;
+        const beforeMax = Math.max(...before.map(l => l.reps || 0));
+        const withinMax = Math.max(...within.map(l => l.reps || 0));
+        const d = withinMax - beforeMax;
+        if (d !== 0) deltas.push({ name: ex.name, raw: d, text: (d > 0 ? '+' : '') + d + ' Wdh.' });
+      } else {
+        if (!before.length) return;
+        const beforeMax = Math.max(...before.map(l => l.weight || 0));
+        const withinMax = Math.max(...within.map(l => l.weight || 0));
+        const d = withinMax - beforeMax;
+        if (d !== 0) deltas.push({ name: ex.name, raw: d, text: (d > 0 ? '+' : '') + d + unit });
+      }
+    });
+    if (!sessionDates.size) return null;
+    deltas.sort((a, b) => b.raw - a.raw);
+    const top = deltas[0];
+    return {
+      label: 'Gym — ' + sessionDates.size + ' Session' + (sessionDates.size === 1 ? '' : 's'),
+      value: sessionDates.size,
+      display: top ? (top.text + ' ' + top.name) : (sessionDates.size + ' Sessions'),
+      detail: deltas.length ? deltas.map(d => d.name + ' ' + d.text) : null
+    };
+  }
+
+  function waterSummary(ps, pe) {
+    const w = readJSON('po_water_v1', null);
+    if (!w || !w.logs || !Object.keys(w.logs).length) return null;
+    const profile = Object.assign({ weightKg: 75, age: 25, sex: 'm', activityHrsPerWeek: 5 }, w.profile || {});
+    const wKg = w.weightUnit === 'lb' ? (profile.weightKg || 0) / 2.20462 : (profile.weightKg || 0);
+    const base = wKg * 35;
+    const exercise = (profile.activityHrsPerWeek || 0) / 7 * 500;
+    const cafLogs = readJSON('caf:logs', []);
+    const midnight = startOfDay(new Date()).getTime();
+    const caffeineMgToday = Math.round(cafLogs.filter(l => l.ts >= midnight).reduce((a, l) => a + (l.mg || 0), 0));
+    const caffeine = Math.max(0, caffeineMgToday - 200) * 1.5;
+    const subs = (w.substances || []).reduce((s, x) => { const dose = (x.dose != null ? x.dose : x.defaultDose) || 0; return s + Math.max(0, dose * (x.mlPerUnit || 0)); }, 0);
+    let adjust = 0; if (profile.sex === 'm') adjust += 200; if ((profile.age || 0) >= 50) adjust += 100;
+    const targetMl = base + exercise + caffeine + subs + adjust;
+    const unitMl = w.unit === 'bottle' ? (w.bottleMl || 500) : w.unit === 'glass' ? (w.glassMl || 250) : w.unit === 'oz' ? 30 : 1;
+
+    const today = startOfDay(new Date());
+    const loopEnd = pe < today ? pe : today;
+    if (loopEnd < ps) return null;
+    let checked = 0, hit = 0;
+    for (let d = new Date(ps); d <= loopEnd; d.setDate(d.getDate() + 1)) {
+      checked++;
+      const ml = (w.logs[toISO(d)] || 0) * unitMl;
+      if (ml >= targetMl) hit++;
+    }
+    if (!checked) return null;
+    return { value: checked ? hit / checked : 0, display: hit + '/' + checked + ' Tage', detail: null };
+  }
+
+  function foodSummary(ps, pe) {
+    const entries = readJSON('po_food_v1', []);
+    const rows = entries.filter(e => e && e.date && inPeriod(parseISO(e.date), ps, pe));
+    if (!rows.length) return null;
+    const byDay = {};
+    rows.forEach(e => {
+      if (!byDay[e.date]) byDay[e.date] = { kcal: 0, protein: 0, carbs: 0, sugar: 0, fat: 0 };
+      byDay[e.date].kcal += e.kcal || 0; byDay[e.date].protein += e.protein || 0;
+      byDay[e.date].carbs += e.carbs || 0; byDay[e.date].sugar += e.sugar || 0; byDay[e.date].fat += e.fat || 0;
+    });
+    const days = Object.values(byDay), n = days.length;
+    const avg = (k) => days.reduce((s, d) => s + d[k], 0) / n;
+    const avgKcal = avg('kcal'), avgP = avg('protein'), avgC = avg('carbs'), avgS = avg('sugar'), avgF = avg('fat');
+    return {
+      value: avgKcal,
+      display: Math.round(avgKcal) + ' kcal · ' + Math.round(avgP) + 'g P',
+      detail: ['Ø Kohlenhydrate ' + Math.round(avgC) + 'g', 'Ø Zucker ' + Math.round(avgS) + 'g', 'Ø Fett ' + Math.round(avgF) + 'g']
+    };
+  }
+
+  function financeSummary(ps, pe) {
+    const hist = readJSON('nw:history', []);
+    if (!hist.length) return null;
+    const psT = ps.getTime(), peT = pe.getTime();
+    const beforeStart = hist.filter(h => h.t <= psT);
+    const uptoEnd = hist.filter(h => h.t <= peT);
+    if (!uptoEnd.length) return null;
+    if (!beforeStart.length && uptoEnd.length < 2) return null;
+    const endVal = uptoEnd[uptoEnd.length - 1].v;
+    const startVal = beforeStart.length ? beforeStart[beforeStart.length - 1].v : uptoEnd[0].v;
+    const delta = endVal - startVal;
+    const currency = readJSON('nw_currency', 'CHF');
+    const sign = delta >= 0 ? '+' : '−';
+    const activity = readJSON('nw:activity', []);
+    const inRange = activity.filter(a => a.ts >= psT && a.ts <= peT).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta)).slice(0, 3);
+    const detail = inRange.length ? inRange.map(a => (a.name || a.cat || 'Eintrag') + ' ' + (a.delta >= 0 ? '+' : '−') + Math.abs(Math.round(a.delta)) + ' ' + currency) : null;
+    return { value: delta, display: sign + Math.abs(Math.round(delta)) + ' ' + currency, detail };
+  }
+
+  const SOURCES = [
+    { key: 'learning', emoji: '📚', label: 'Learning', color: 'var(--violet)', compute: learningSummary, compactExpandable: true },
+    { key: 'gym', emoji: '🏋️', label: 'Gym', color: 'var(--orange)', compute: gymSummary, compactExpandable: true },
+    { key: 'water', emoji: '💧', label: 'Wasserziel erreicht', color: 'var(--blue)', compute: waterSummary, compactExpandable: false },
+    { key: 'food', emoji: '🍽️', label: 'Ernährung', color: 'var(--peach)', compute: foodSummary, compactExpandable: true },
+    { key: 'finance', emoji: '💰', label: 'Net Worth', color: 'var(--gold)', compute: financeSummary, compactExpandable: false }
+  ];
+
+  function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  function renderAutoRows(ps, pe, container) {
+    container.innerHTML = '';
+    let any = false;
+    SOURCES.forEach(src => {
+      const res = src.compute(ps, pe);
+      if (!res) return;
+      any = true;
+      const label = res.label || src.label;
+      const hasDetail = res.detail && res.detail.length;
+      if (src.compactExpandable && hasDetail) {
+        const det = document.createElement('details');
+        det.className = 'auto-row';
+        det.innerHTML = '<summary><span class="auto-dot" style="background:' + src.color + '"></span><span class="auto-label">' + src.emoji + ' ' + escapeHtml(label) + '</span><span class="auto-val" style="color:' + src.color + '">' + escapeHtml(res.display) + '</span><span class="chevron">▾</span></summary>'
+          + '<div class="auto-detail">' + res.detail.map(escapeHtml).join('<br>') + '</div>';
+        container.appendChild(det);
+      } else {
+        const row = document.createElement('div');
+        row.className = 'auto-row-plain';
+        row.innerHTML = '<span class="auto-dot" style="background:' + src.color + '"></span><span class="auto-label">' + src.emoji + ' ' + escapeHtml(label) + '</span><span class="auto-val" style="color:' + src.color + '">' + escapeHtml(res.display) + '</span>';
+        container.appendChild(row);
+      }
+    });
+    if (!any) container.innerHTML = '<div class="empty-state">Noch keine Daten für diesen Zeitraum.</div>';
+  }
+
+  /* ============ reflection entries storage ============ */
+  const ENTRIES_KEY = 'reflection:entries';
+  function loadEntries() { return readJSON(ENTRIES_KEY, []); }
+  function saveEntries(v) { localStorage.setItem(ENTRIES_KEY, JSON.stringify(v)); }
+  function uid() { return 'r' + Date.now() + Math.floor(Math.random() * 1000); }
+  function findEntry(type, periodStartISO) { return loadEntries().find(e => e.type === type && e.periodStart === periodStartISO); }
+
+  /* ============ page state ============ */
+  const TAB_KEY = 'reflection_active_tab';
+  let activeType = (function () { try { const v = localStorage.getItem(TAB_KEY); return (v === 'week' || v === 'month') ? v : 'week'; } catch (e) { return 'week'; } })();
+  let selectedIdx = 3;
+  let currentScore = 0;
+
+  function last4Periods(type) {
+    const out = [];
+    for (let i = 3; i >= 0; i--) out.push(periodFor(type, shiftRef(type, new Date(), -i)));
+    return out;
+  }
+
+  function setTab(type) {
+    activeType = type;
+    try { localStorage.setItem(TAB_KEY, type); } catch (e) {}
+    selectedIdx = 3;
+    document.querySelectorAll('#reflTabs .tab').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+    $('goodLabel').textContent = type === 'week' ? 'Was lief gut diese Woche?' : 'Was lief gut diesen Monat?';
+    $('scoreLabel').textContent = type === 'week' ? 'Wie würdest du die Woche insgesamt bewerten?' : 'Wie würdest du den Monat insgesamt bewerten?';
+    $('trendLabel').innerHTML = 'Trend · letzte 4 ' + (type === 'week' ? 'Wochen' : 'Monate') + '<span class="line"></span>';
+    $('hintText').textContent = 'Zeilen und ' + (type === 'week' ? 'Wochen' : 'Monats') + '-Balken sind anklickbar für Details.';
+    renderCurrentCard();
+    renderTrend();
+    renderArchive();
+  }
+
+  function renderScoreRow() {
+    const row = $('scoreRow');
+    row.innerHTML = '';
+    for (let i = 1; i <= 10; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'score-dot' + (i <= currentScore ? ' filled' : '');
+      btn.addEventListener('click', () => { currentScore = i; renderScoreRow(); });
+      row.appendChild(btn);
+    }
+  }
+
+  function renderCurrentCard() {
+    const periods = last4Periods(activeType);
+    const cur = periods[3];
+    $('periodTitle').textContent = periodTitle(activeType, cur);
+    renderAutoRows(cur.start, cur.end, $('autoRows'));
+    const existing = findEntry(activeType, toISO(cur.start));
+    $('goodInput').value = existing ? existing.good || '' : '';
+    $('improveInput').value = existing ? existing.improve || '' : '';
+    currentScore = existing ? (existing.score || 0) : 0;
+    renderScoreRow();
+    $('saveStatus').textContent = '';
+  }
+
+  $('saveBtn').addEventListener('click', () => {
+    const periods = last4Periods(activeType);
+    const cur = periods[3];
+    const psISO = toISO(cur.start), peISO = toISO(cur.end);
+    const list = loadEntries();
+    const idx = list.findIndex(e => e.type === activeType && e.periodStart === psISO);
+    const entry = {
+      id: idx !== -1 ? list[idx].id : uid(),
+      type: activeType, periodStart: psISO, periodEnd: peISO,
+      good: $('goodInput').value.trim(), improve: $('improveInput').value.trim(),
+      score: currentScore, createdAt: idx !== -1 ? list[idx].createdAt : new Date().toISOString()
+    };
+    if (idx !== -1) list[idx] = entry; else list.push(entry);
+    saveEntries(list);
+    $('saveStatus').textContent = 'Gespeichert ✓';
+    setTimeout(() => { $('saveStatus').textContent = ''; }, 1800);
+    renderTrend();
+    renderArchive();
+  });
+
+  /* ============ trend ============ */
+  function renderTrend() {
+    const periods = last4Periods(activeType);
+    const results = periods.map(p => {
+      const row = {};
+      SOURCES.forEach(src => { row[src.key] = src.compute(p.start, p.end); });
+      return row;
+    });
+    const totalDatapoints = results.reduce((s, r) => s + SOURCES.filter(src => r[src.key]).length, 0);
+    if (totalDatapoints < 2) { $('trendSection').style.display = 'none'; return; }
+    $('trendSection').style.display = '';
+
+    const activeSources = SOURCES.filter(src => results.some(r => r[src.key]));
+    const maxByCat = {};
+    activeSources.forEach(src => { maxByCat[src.key] = Math.max.apply(null, results.map(r => (r[src.key] ? r[src.key].value : 0)).concat([0])); });
+
+    $('legend').innerHTML = activeSources.map(src => '<span class="item"><span class="dot" style="background:' + src.color + '"></span>' + src.label.replace(/ —.*/, '').replace('Wasserziel erreicht', 'Wasser') + '</span>').join('');
+
+    const entries = loadEntries().filter(e => e.type === activeType);
+
+    const row = $('trendRow');
+    row.innerHTML = '';
+    periods.forEach((p, i) => {
+      const isCurrent = i === 3;
+      const psISO = toISO(p.start);
+      const entry = entries.find(e => e.periodStart === psISO);
+      const ratios = activeSources.map(src => {
+        const res = results[i][src.key];
+        if (!res) return { src, ratio: 0 };
+        const max = maxByCat[src.key] || 0;
+        const ratio = max > 0 ? Math.max(0.04, res.value / max) : (res.value !== 0 ? 1 : 0);
+        return { src, ratio };
+      }).filter(r => r.ratio > 0);
+      const sum = ratios.reduce((s, r) => s + r.ratio, 0);
+
+      const label = document.createElement('button');
+      label.type = 'button';
+      label.className = 'week-label-el' + (i === selectedIdx ? ' selected' : '');
+      const segs = sum > 0 ? ratios.map(r => '<div class="seg" style="height:' + ((r.ratio / sum) * 100).toFixed(1) + '%;background:' + r.src.color + '"></div>').join('') : '';
+      label.innerHTML = '<div class="stack">' + segs + '</div>'
+        + '<span class="week-caption">' + trendCaption(activeType, p, isCurrent) + '</span>'
+        + '<span class="week-score-el">' + (entry ? entry.score : '–') + '</span>';
+      label.addEventListener('click', () => { selectedIdx = i; renderTrend(); });
+      row.appendChild(label);
+    });
+
+    const panelsWrap = $('panels');
+    panelsWrap.innerHTML = '';
+    const p = periods[selectedIdx];
+    const r = results[selectedIdx];
+    const entry = entries.find(e => e.periodStart === toISO(p.start));
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    let html = '<div class="panel-head"><span class="panel-title">' + periodTitle(activeType, p) + '</span><span class="panel-score">⭐ ' + (entry ? entry.score + '/10' : '– /10') + '</span></div>';
+
+    const expCols = activeSources.map(src => {
+      const res = r[src.key];
+      const max = maxByCat[src.key] || 0;
+      const hpct = res ? (max > 0 ? Math.max(6, (res.value / max) * 100) : (res.value !== 0 ? 100 : 6)) : 0;
+      const valTxt = res ? res.display : '—';
+      const shortLabel = src.label.replace(/ —.*/, '').replace('Wasserziel erreicht', 'Wasser');
+      return '<div class="exp-col"><span class="exp-val" style="color:' + src.color + '">' + escapeHtml(valTxt) + '</span><div class="exp-bar" style="height:' + (res ? hpct : 0) + '%;background:' + src.color + '"></div><span class="exp-name">' + escapeHtml(shortLabel) + '</span></div>';
+    }).join('');
+    html += '<div class="exploded">' + expCols + '</div>';
+
+    const cards = activeSources.filter(src => r[src.key] && r[src.key].detail && r[src.key].detail.length).map(src => {
+      const res = r[src.key];
+      const title = src.label.replace(/ —.*/, '');
+      return '<div class="detail-card" style="--c:' + src.color + '"><h4>' + src.emoji + ' ' + escapeHtml(title) + '</h4><p>' + res.detail.map(escapeHtml).join('<br>') + '</p></div>';
+    }).join('');
+    if (cards) html += '<div class="detail-grid">' + cards + '</div>';
+
+    if (entry && (entry.good || entry.improve)) {
+      html += '<div class="detail-grid" style="margin-top:12px">';
+      if (entry.good) html += '<div class="detail-card" style="--c:var(--teal)"><h4>✅ Lief gut</h4><p>' + escapeHtml(entry.good) + '</p></div>';
+      if (entry.improve) html += '<div class="detail-card" style="--c:var(--teal)"><h4>🔧 Verbessern</h4><p>' + escapeHtml(entry.improve) + '</p></div>';
+      html += '</div>';
+    }
+
+    panel.innerHTML = html;
+    panelsWrap.appendChild(panel);
+  }
+
+  /* ============ archive ============ */
+  function renderArchive() {
+    const periods = last4Periods(activeType);
+    const currentStartISO = toISO(periods[3].start);
+    const entries = loadEntries()
+      .filter(e => e.type === activeType && e.periodStart !== currentStartISO)
+      .sort((a, b) => b.periodStart < a.periodStart ? -1 : 1);
+    const wrap = $('archiveList');
+    wrap.innerHTML = '';
+    if (!entries.length) { wrap.innerHTML = '<div class="empty-state">Noch kein Archiv für diesen Zeitraum-Typ.</div>'; return; }
+    entries.forEach(entry => {
+      const ps = parseISO(entry.periodStart), pe = parseISO(entry.periodEnd);
+      const p = { start: ps, end: pe };
+      const rowResults = {};
+      SOURCES.forEach(src => { rowResults[src.key] = src.compute(ps, pe); });
+      const activeHere = SOURCES.filter(src => rowResults[src.key]);
+
+      const item = document.createElement('details');
+      item.className = 'archive-item';
+      const dots = activeHere.map(src => '<span class="dot" style="background:' + src.color + '"></span>').join('');
+      item.innerHTML = '<summary class="archive-summary"><span class="archive-period">' + escapeHtml(periodTitle(activeType, p)) + '</span><span class="archive-dots">' + dots + '</span><span class="archive-score">' + entry.score + '/10</span></summary>';
+      const body = document.createElement('div');
+      body.className = 'archive-body';
+      const autoWrap = document.createElement('div');
+      renderAutoRows(ps, pe, autoWrap);
+      body.appendChild(autoWrap);
+      if (entry.good) {
+        const g = document.createElement('div'); g.className = 'prompt';
+        g.innerHTML = '<div class="prompt-label">✅ Lief gut</div><textarea rows="2" readonly>' + escapeHtml(entry.good) + '</textarea>';
+        body.appendChild(g);
+      }
+      if (entry.improve) {
+        const im = document.createElement('div'); im.className = 'prompt';
+        im.innerHTML = '<div class="prompt-label">🔧 Verbessern</div><textarea rows="2" readonly>' + escapeHtml(entry.improve) + '</textarea>';
+        body.appendChild(im);
+      }
+      item.appendChild(body);
+      wrap.appendChild(item);
+    });
+  }
+
+  document.querySelectorAll('#reflTabs .tab').forEach(b => b.addEventListener('click', () => setTab(b.dataset.type)));
+  setTab(activeType);
+
+  if (window.initCloudSync) {
+    window.initCloudSync({ appKey: 'reflection', syncedKeys: [ENTRIES_KEY], onApplied: function () { renderCurrentCard(); renderTrend(); renderArchive(); } });
+  }
+})();
+</script>
+</body>
+</html>

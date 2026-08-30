@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vorschau · Reflection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text-primary: #F2EFE6;
+  --text-secondary: #ABA79A;
+  --text-tertiary: #6F6C61;
+  --teal: #5AC8B0;
+  --violet: #9C8CE0;
+  --orange: #E0785C;
+  --blue: #4FA3E0;
+  --peach: #E3A17E;
+  --gold: #C9A227;
+  --font-display: "Zilla Slab", Georgia, serif;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:#0A0C0B; color:var(--text-secondary); font-family:var(--font); -webkit-font-smoothing:antialiased; }
+body { min-height:100vh; padding:32px 20px 60px; position:relative; }
+body::before {
+  content:''; position:fixed; inset:0;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px),
+    radial-gradient(circle at 85% 0%, rgba(90,200,176,0.10), transparent 55%);
+  pointer-events:none; z-index:-1;
+}
+.page { max-width: 760px; margin:0 auto; }
+.header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+.header-emoji { font-size:28px; }
+h1 { font-family:var(--font-display); font-weight:700; letter-spacing:-0.01em; color:var(--text-primary); font-size:27px; margin:0; }
+.sub { font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 8px; }
+.hint { font-size:11.5px; color:var(--text-tertiary); margin:0 0 22px; }
+
+.section-label { font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 10px; display:flex; align-items:center; gap:7px; }
+.section-label .line { flex:1; height:1px; background:rgba(255,255,255,0.08); }
+
+.tabs { display:flex; gap:6px; margin-bottom:22px; background:rgba(255,255,255,0.03); border-radius:12px; padding:4px; }
+.tab { flex:1; text-align:center; padding:10px 8px; font-size:13px; color:var(--text-tertiary); border-radius:9px; cursor:pointer; }
+.tab.active { color:#0A0C0B; background:var(--teal); font-weight:600; }
+
+.card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:20px; margin-bottom:20px; box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+.period { font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--text-primary); margin:0 0 14px; }
+
+details.auto-row { border-bottom:1px solid rgba(255,255,255,0.05); }
+details.auto-row:last-of-type { border-bottom:none; }
+details.auto-row summary { list-style:none; cursor:pointer; padding:9px 0; display:flex; align-items:center; gap:10px; }
+details.auto-row summary::-webkit-details-marker { display:none; }
+.auto-dot { width:8px; height:8px; border-radius:50%; flex:none; }
+.auto-label { flex:1; font-size:13px; color:var(--text-secondary); }
+.auto-val { font-family:var(--font-mono); font-size:13px; font-weight:600; }
+.chevron { font-size:10px; color:var(--text-tertiary); }
+.auto-detail { padding:0 0 12px 18px; font-size:12px; color:var(--text-tertiary); font-family:var(--font-mono); line-height:1.9; }
+
+.prompt { margin-top:16px; }
+.prompt-label { font-size:13px; color:var(--text-primary); margin-bottom:7px; display:flex; align-items:center; gap:7px; font-weight:600; }
+textarea { width:100%; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.09); border-radius:9px; padding:11px 13px; color:var(--text-primary); font-family:var(--font); font-size:13.5px; resize:vertical; }
+.score-row { display:flex; gap:5px; margin-top:2px; }
+.score-dot { flex:1; height:26px; border-radius:6px; background:rgba(255,255,255,0.06); }
+.score-dot.filled { background:var(--teal); }
+.save-btn { margin-top:16px; width:100%; padding:12px; border-radius:9px; border:none; font-weight:700; font-family:var(--font-display); font-size:15px; cursor:pointer; background:var(--teal); color:#0A0C0B; }
+
+.legend { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:14px; font-size:11px; color:var(--text-tertiary); }
+.legend span { display:flex; align-items:center; gap:5px; }
+.legend .dot { width:7px; height:7px; border-radius:50%; }
+
+.trend-select { display:none; }
+.trend-row { display:flex; gap:10px; margin-bottom:4px; }
+.week-label-el { flex:1; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px; padding:8px 4px 10px; border-radius:10px; border:1px solid transparent; }
+.stack { width:100%; height:64px; border-radius:4px; overflow:hidden; display:flex; flex-direction:column-reverse; background:rgba(255,255,255,0.04); }
+.stack .seg { width:100%; }
+.week-caption { font-family:var(--font-mono); font-size:9px; color:var(--text-tertiary); }
+.week-score-el { font-family:var(--font-mono); font-size:11px; color:var(--teal); font-weight:600; }
+
+#s-w32:checked ~ .trend-row label[for=s-w32],
+#s-w33:checked ~ .trend-row label[for=s-w33],
+#s-w34:checked ~ .trend-row label[for=s-w34],
+#s-wnow:checked ~ .trend-row label[for=s-wnow] {
+  border-color: rgba(90,200,176,0.4);
+  background: rgba(90,200,176,0.06);
+}
+
+.panels { margin-top:16px; margin-bottom:30px; }
+.panel { display:none; background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.09); border-radius:16px; padding:22px; box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+#s-w32:checked ~ .panels .panel-w32,
+#s-w33:checked ~ .panels .panel-w33,
+#s-w34:checked ~ .panels .panel-w34,
+#s-wnow:checked ~ .panels .panel-wnow { display:block; }
+
+.panel-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px; }
+.panel-title { font-family:var(--font-display); font-size:19px; font-weight:700; color:var(--text-primary); }
+.panel-score { font-family:var(--font-mono); font-size:15px; color:var(--teal); font-weight:600; }
+
+.exploded { display:flex; gap:14px; align-items:flex-end; height:110px; margin-bottom:22px; }
+.exp-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end; }
+.exp-val { font-family:var(--font-mono); font-size:13px; font-weight:600; }
+.exp-bar { width:100%; border-radius:5px 5px 0 0; }
+.exp-name { font-size:11px; color:var(--text-tertiary); }
+
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width:520px) { .detail-grid { grid-template-columns:1fr; } }
+.detail-card { border-left:3px solid var(--c); background:rgba(255,255,255,0.03); border-radius:0 10px 10px 0; padding:14px 16px; }
+.detail-card h4 { margin:0 0 8px; font-family:var(--font-display); font-size:14.5px; font-weight:700; color:var(--text-primary); }
+.detail-card p { margin:0; font-size:13.5px; line-height:1.7; color:var(--text-secondary); }
+
+.archive-item { border-radius:11px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); margin-bottom:7px; padding:11px 13px; display:flex; align-items:center; gap:10px; }
+.archive-period { flex:1; font-size:13px; color:var(--text-secondary); }
+.archive-score { font-family:var(--font-mono); font-size:12px; color:var(--teal); font-weight:600; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header"><span class="header-emoji">📖</span><h1>Reflection</h1></div>
+  <p class="sub">Wochen- & Monatsrückblick</p>
+  <p class="hint">Zeilen und Wochen-Balken sind anklickbar für Details.</p>
+
+  <div class="tabs">
+    <div class="tab active">📅 Woche</div>
+    <div class="tab">🗓️ Monat</div>
+  </div>
+
+  <div class="card">
+    <div class="period">24.–30. August</div>
+    <div class="section-label">Automatisch erfasst<span class="line"></span></div>
+
+    <details class="auto-row">
+      <summary><span class="auto-dot" style="background:var(--violet)"></span><span class="auto-label">📚 Learning</span><span class="auto-val" style="color:var(--violet)">4.5h</span><span class="chevron">▾</span></summary>
+      <div class="auto-detail">🏠 Immobilien 2.1h<br>📈 Trading 1.5h<br>🤖 KI 0.9h</div>
+    </details>
+    <details class="auto-row">
+      <summary><span class="auto-dot" style="background:var(--orange)"></span><span class="auto-label">🏋️ Gym — 3 Sessions</span><span class="auto-val" style="color:var(--orange)">+5kg Bank</span><span class="chevron">▾</span></summary>
+      <div class="auto-detail">Bankdrücken +5kg<br>Kniebeuge +2.5kg<br>Klimmzüge +1 Wdh.</div>
+    </details>
+    <details class="auto-row" open>
+      <summary><span class="auto-dot" style="background:var(--blue)"></span><span class="auto-label">💧 Wasserziel erreicht</span><span class="auto-val" style="color:var(--blue)">5/7 Tage</span></summary>
+    </details>
+    <details class="auto-row">
+      <summary><span class="auto-dot" style="background:var(--peach)"></span><span class="auto-label">🍽️ Ernährung</span><span class="auto-val" style="color:var(--peach)">1980 kcal · 92g P</span><span class="chevron">▾</span></summary>
+      <div class="auto-detail">Ø Kohlenhydrate 210g<br>Ø Zucker 48g<br>Ø Fett 68g</div>
+    </details>
+    <details class="auto-row" open>
+      <summary><span class="auto-dot" style="background:var(--gold)"></span><span class="auto-label">💰 Net Worth</span><span class="auto-val" style="color:var(--gold)">+340 €</span></summary>
+    </details>
+
+    <div class="prompt">
+      <div class="prompt-label">✅ Was lief gut diese Woche?</div>
+      <textarea rows="2">Gym-Streak durchgezogen, Learning-Tracker konsequent genutzt</textarea>
+    </div>
+    <div class="prompt">
+      <div class="prompt-label">🔧 Was kannst du verbessern?</div>
+      <textarea rows="2">Wasserziel an 2 Tagen verpasst, spät ins Bett</textarea>
+    </div>
+    <div class="prompt">
+      <div class="prompt-label">⭐ Wie war die Woche insgesamt?</div>
+      <div class="score-row">
+        <div class="score-dot filled"></div><div class="score-dot filled"></div><div class="score-dot filled"></div>
+        <div class="score-dot filled"></div><div class="score-dot filled"></div><div class="score-dot filled"></div>
+        <div class="score-dot filled"></div><div class="score-dot"></div><div class="score-dot"></div><div class="score-dot"></div>
+      </div>
+    </div>
+    <button class="save-btn">Speichern</button>
+  </div>
+
+  <div class="section-label">Trend · letzte 4 Wochen<span class="line"></span></div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--violet)"></span>Learning</span>
+    <span><span class="dot" style="background:var(--orange)"></span>Gym</span>
+    <span><span class="dot" style="background:var(--blue)"></span>Wasser</span>
+    <span><span class="dot" style="background:var(--peach)"></span>Ernährung</span>
+    <span><span class="dot" style="background:var(--gold)"></span>Finance</span>
+  </div>
+
+  <input type="radio" name="week" id="s-w32" class="trend-select">
+  <input type="radio" name="week" id="s-w33" class="trend-select">
+  <input type="radio" name="week" id="s-w34" class="trend-select">
+  <input type="radio" name="week" id="s-wnow" class="trend-select" checked>
+
+  <div class="trend-row">
+    <label for="s-w32" class="week-label-el">
+      <div class="stack"><div class="seg" style="height:25%;background:var(--violet)"></div><div class="seg" style="height:20%;background:var(--orange)"></div><div class="seg" style="height:20%;background:var(--blue)"></div><div class="seg" style="height:20%;background:var(--peach)"></div><div class="seg" style="height:15%;background:var(--gold)"></div></div>
+      <span class="week-caption">KW32</span><span class="week-score-el">5</span>
+    </label>
+    <label for="s-w33" class="week-label-el">
+      <div class="stack"><div class="seg" style="height:22%;background:var(--violet)"></div><div class="seg" style="height:24%;background:var(--orange)"></div><div class="seg" style="height:18%;background:var(--blue)"></div><div class="seg" style="height:16%;background:var(--peach)"></div><div class="seg" style="height:20%;background:var(--gold)"></div></div>
+      <span class="week-caption">KW33</span><span class="week-score-el">8</span>
+    </label>
+    <label for="s-w34" class="week-label-el">
+      <div class="stack"><div class="seg" style="height:18%;background:var(--violet)"></div><div class="seg" style="height:22%;background:var(--orange)"></div><div class="seg" style="height:20%;background:var(--blue)"></div><div class="seg" style="height:18%;background:var(--peach)"></div><div class="seg" style="height:22%;background:var(--gold)"></div></div>
+      <span class="week-caption">KW34</span><span class="week-score-el">7</span>
+    </label>
+    <label for="s-wnow" class="week-label-el">
+      <div class="stack"><div class="seg" style="height:26%;background:var(--violet)"></div><div class="seg" style="height:20%;background:var(--orange)"></div><div class="seg" style="height:18%;background:var(--blue)"></div><div class="seg" style="height:16%;background:var(--peach)"></div><div class="seg" style="height:20%;background:var(--gold)"></div></div>
+      <span class="week-caption">Aktuell</span><span class="week-score-el">7</span>
+    </label>
+  </div>
+
+  <div class="panels">
+    <div class="panel panel-w32">
+      <div class="panel-head"><span class="panel-title">Woche 32 · 3.–9. Aug</span><span class="panel-score">⭐ 5/10</span></div>
+      <div class="exploded">
+        <div class="exp-col"><span class="exp-val" style="color:var(--violet)">2.8h</span><div class="exp-bar" style="height:55%;background:var(--violet)"></div><span class="exp-name">Learning</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--orange)">2 Sess.</span><div class="exp-bar" style="height:40%;background:var(--orange)"></div><span class="exp-name">Gym</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--blue)">3/7</span><div class="exp-bar" style="height:43%;background:var(--blue)"></div><span class="exp-name">Wasser</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--peach)">2210 kcal</span><div class="exp-bar" style="height:70%;background:var(--peach)"></div><span class="exp-name">Ernährung</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--gold)">−60€</span><div class="exp-bar" style="height:25%;background:var(--gold)"></div><span class="exp-name">Finance</span></div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card" style="--c:var(--violet)"><h4>📚 Learning</h4><p>Immobilien 1.4h<br>KI 0.9h<br>Sprachen 0.5h</p></div>
+        <div class="detail-card" style="--c:var(--orange)"><h4>🏋️ Gym</h4><p>Kniebeuge +0kg (Plateau)<br>Klimmzüge +0 Wdh.</p></div>
+        <div class="detail-card" style="--c:var(--peach)"><h4>🍽️ Ernährung</h4><p>Ø 2210 kcal · 74g Protein<br>Ø 240g Kohlenhydrate</p></div>
+        <div class="detail-card" style="--c:var(--gold)"><h4>💰 Finance</h4><p>Net Worth −60 € durch<br>unerwartete Ausgabe</p></div>
+      </div>
+    </div>
+
+    <div class="panel panel-w33">
+      <div class="panel-head"><span class="panel-title">Woche 33 · 10.–16. Aug</span><span class="panel-score">⭐ 8/10</span></div>
+      <div class="exploded">
+        <div class="exp-col"><span class="exp-val" style="color:var(--violet)">5.1h</span><div class="exp-bar" style="height:80%;background:var(--violet)"></div><span class="exp-name">Learning</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--orange)">4 Sess.</span><div class="exp-bar" style="height:75%;background:var(--orange)"></div><span class="exp-name">Gym</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--blue)">6/7</span><div class="exp-bar" style="height:85%;background:var(--blue)"></div><span class="exp-name">Wasser</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--peach)">1890 kcal</span><div class="exp-bar" style="height:55%;background:var(--peach)"></div><span class="exp-name">Ernährung</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--gold)">+210€</span><div class="exp-bar" style="height:60%;background:var(--gold)"></div><span class="exp-name">Finance</span></div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card" style="--c:var(--violet)"><h4>📚 Learning</h4><p>Trading 2.3h<br>Immobilien 1.8h<br>KI 1.0h</p></div>
+        <div class="detail-card" style="--c:var(--orange)"><h4>🏋️ Gym</h4><p>Bankdrücken +2.5kg<br>Kreuzheben +5kg</p></div>
+        <div class="detail-card" style="--c:var(--peach)"><h4>🍽️ Ernährung</h4><p>Ø 1890 kcal · 98g Protein<br>Ø 180g Kohlenhydrate</p></div>
+        <div class="detail-card" style="--c:var(--gold)"><h4>💰 Finance</h4><p>Net Worth +210 €</p></div>
+      </div>
+    </div>
+
+    <div class="panel panel-w34">
+      <div class="panel-head"><span class="panel-title">Woche 34 · 17.–23. Aug</span><span class="panel-score">⭐ 7/10</span></div>
+      <div class="exploded">
+        <div class="exp-col"><span class="exp-val" style="color:var(--violet)">3.2h</span><div class="exp-bar" style="height:50%;background:var(--violet)"></div><span class="exp-name">Learning</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--orange)">2 Sess.</span><div class="exp-bar" style="height:40%;background:var(--orange)"></div><span class="exp-name">Gym</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--blue)">4/7</span><div class="exp-bar" style="height:55%;background:var(--blue)"></div><span class="exp-name">Wasser</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--peach)">2050 kcal</span><div class="exp-bar" style="height:65%;background:var(--peach)"></div><span class="exp-name">Ernährung</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--gold)">+120€</span><div class="exp-bar" style="height:45%;background:var(--gold)"></div><span class="exp-name">Finance</span></div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card" style="--c:var(--violet)"><h4>📚 Learning</h4><p>Trading 1.9h<br>KI 1.3h</p></div>
+        <div class="detail-card" style="--c:var(--orange)"><h4>🏋️ Gym</h4><p>Neue Trading-Strategie getestet<br>Kniebeuge +2.5kg</p></div>
+        <div class="detail-card" style="--c:var(--peach)"><h4>🍽️ Ernährung</h4><p>Ø 2050 kcal · 88g Protein</p></div>
+        <div class="detail-card" style="--c:var(--gold)"><h4>💰 Finance</h4><p>Net Worth +120 €</p></div>
+      </div>
+    </div>
+
+    <div class="panel panel-wnow">
+      <div class="panel-head"><span class="panel-title">Woche · 24.–30. Aug</span><span class="panel-score">⭐ 7/10</span></div>
+      <div class="exploded">
+        <div class="exp-col"><span class="exp-val" style="color:var(--violet)">4.5h</span><div class="exp-bar" style="height:70%;background:var(--violet)"></div><span class="exp-name">Learning</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--orange)">3 Sess.</span><div class="exp-bar" style="height:55%;background:var(--orange)"></div><span class="exp-name">Gym</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--blue)">5/7</span><div class="exp-bar" style="height:65%;background:var(--blue)"></div><span class="exp-name">Wasser</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--peach)">1980 kcal</span><div class="exp-bar" style="height:60%;background:var(--peach)"></div><span class="exp-name">Ernährung</span></div>
+        <div class="exp-col"><span class="exp-val" style="color:var(--gold)">+340€</span><div class="exp-bar" style="height:75%;background:var(--gold)"></div><span class="exp-name">Finance</span></div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card" style="--c:var(--violet)"><h4>📚 Learning</h4><p>Immobilien 2.1h<br>Trading 1.5h<br>KI 0.9h</p></div>
+        <div class="detail-card" style="--c:var(--orange)"><h4>🏋️ Gym — 3 Sessions</h4><p>Bankdrücken +5kg<br>Kniebeuge +2.5kg<br>Klimmzüge +1 Wdh.</p></div>
+        <div class="detail-card" style="--c:var(--peach)"><h4>🍽️ Ernährung</h4><p>Ø 1980 kcal · 92g Protein<br>Ø 210g Kohlenhydrate · 48g Zucker · 68g Fett</p></div>
+        <div class="detail-card" style="--c:var(--gold)"><h4>💰 Finance</h4><p>Net Worth +340 €</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Archiv<span class="line"></span></div>
+  <div class="archive-item"><span class="archive-period">17.–23. August</span><span class="archive-score">7/10</span></div>
+  <div class="archive-item"><span class="archive-period">10.–16. August</span><span class="archive-score">8/10</span></div>
+</div>
+</body>
+</html>
