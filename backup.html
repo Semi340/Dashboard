@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="lock.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A0C0B">
+<title>Backup · Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text-primary: #F2EFE6;
+  --text-secondary: #ABA79A;
+  --text-tertiary: #6F6C61;
+  --silver: #B9BAC2;
+  --gold: #C9A227;
+  --red: #E0524A;
+  --mint: #6FE3A0;
+  --font-display: "Zilla Slab", Georgia, "Times New Roman", serif;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: #0A0C0B;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  min-height: 100vh; position: relative; overflow-x: hidden;
+  padding: max(28px, env(safe-area-inset-top)) 20px calc(60px + env(safe-area-inset-bottom));
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px);
+  pointer-events: none; z-index: -1;
+}
+.page { max-width: 640px; margin: 0 auto; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-tertiary); text-decoration: none; font-size: 12.5px; margin-bottom: 14px; }
+.back-link:hover { color: var(--text-primary); }
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.header-emoji { font-size: 26px; }
+h1 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); font-size: 24px; margin: 0; }
+.sub { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-tertiary); margin: 0 0 26px; }
+
+.section-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-tertiary); margin: 0 0 10px; display: flex; align-items: center; gap: 7px; }
+.section-label .line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+
+.status-card { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; margin-bottom: 26px; background: rgba(255,255,255,0.03); border: 1px solid rgba(111,227,160,0.25); }
+.status-card.warn { border-color: rgba(201,162,39,0.35); }
+.status-card.overdue { border-color: rgba(224,82,74,0.4); }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mint); flex: none; }
+.status-card.warn .status-dot { background: var(--gold); }
+.status-card.overdue .status-dot { background: var(--red); }
+.status-text { flex: 1; font-size: 13.5px; color: var(--text-primary); }
+.status-sub { font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary); }
+
+.card { background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 22px; margin-bottom: 22px; box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+.card-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
+.card-desc { font-size: 12.5px; color: var(--text-tertiary); margin: 0 0 16px; line-height: 1.6; }
+
+.include-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+.chip { font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); padding: 5px 11px; border-radius: 999px; }
+.chip .n { color: var(--text-primary); font-weight: 600; }
+
+.excl-note { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-tertiary); margin-bottom: 18px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 9px; padding: 9px 12px; }
+
+.export-btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: 700; font-family: var(--font-display); font-size: 16px; cursor: pointer; background: var(--gold); color: #0A0C0B; }
+.export-btn:hover { filter: brightness(1.06); }
+.export-status { text-align: center; font-size: 12px; color: var(--mint); margin-top: 10px; min-height: 15px; }
+
+.drop-zone { border: 1.5px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 26px; text-align: center; color: var(--text-tertiary); font-size: 12.5px; margin-bottom: 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.drop-zone:hover, .drop-zone.drag { border-color: var(--silver); background: rgba(255,255,255,0.02); color: var(--text-secondary); }
+.drop-zone .icon { font-size: 24px; display: block; margin-bottom: 8px; }
+.import-warn { font-size: 11.5px; color: var(--red); background: rgba(224,82,74,0.08); border: 1px solid rgba(224,82,74,0.25); border-radius: 9px; padding: 9px 12px; }
+.import-status { font-size: 12px; margin-top: 10px; min-height: 15px; }
+.import-status.ok { color: var(--mint); }
+.import-status.err { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="page">
+  <a class="back-link" href="index.html">← Dashboard</a>
+  <div class="header"><span class="header-emoji">💾</span><h1>Backup</h1></div>
+  <p class="sub">Deine Daten, sicher exportiert</p>
+
+  <div class="status-card" id="statusCard">
+    <span class="status-dot"></span>
+    <span class="status-text" id="statusText">Letztes Backup: —</span>
+    <span class="status-sub" id="statusSub"></span>
+  </div>
+
+  <div class="section-label">Exportieren<span class="line"></span></div>
+  <div class="card">
+    <div class="card-title">Backup erstellen</div>
+    <div class="card-desc">Lädt alle deine Dashboard-Daten als einzelne JSON-Datei herunter. Enthält keine Zugangsdaten oder API-Keys.</div>
+    <div class="include-list" id="includeList"></div>
+    <div class="excl-note">🔒 WHOOP-Zugangstoken und dein Nova-API-Key werden bewusst nicht mit exportiert</div>
+    <button class="export-btn" id="exportBtn" type="button">💾 Backup erstellen & herunterladen</button>
+    <div class="export-status" id="exportStatus"></div>
+  </div>
+
+  <div class="section-label">Wiederherstellen<span class="line"></span></div>
+  <div class="card">
+    <div class="card-title">Backup einspielen</div>
+    <div class="card-desc">Stellt einen früheren Stand wieder her. Überschreibt deine aktuellen Daten.</div>
+    <div class="drop-zone" id="dropZone"><span class="icon">📤</span>Datei hierher ziehen oder klicken zum Auswählen</div>
+    <input type="file" id="fileInput" accept="application/json,.json" style="display:none">
+    <div class="import-warn">⚠️ Das Einspielen überschreibt deine aktuellen Daten unwiderruflich. Du wirst vor dem Fortfahren noch einmal gefragt.</div>
+    <div class="import-status" id="importStatus"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+
+  const SUPABASE_URL = (window.DASH_SUPABASE_URL) || 'https://srajryooffirbroltjmg.supabase.co';
+  const SUPABASE_KEY = (window.DASH_SUPABASE_KEY) || 'sb_publishable_5142ZwTLF_DkSVRzciNuRA_bHwRAu4c';
+  const BACKUP_VERSION = 'semis-dashboard-backup-v1';
+  const LAST_BACKUP_KEY = 'last_backup_at';
+
+  // ============================================================
+  // WHAT GETS EXPORTED — an explicit allowlist of the dashboard's
+  // own tracking keys, built by actually searching the codebase
+  // (not guessed). Dynamic per-day/per-category keys are matched
+  // by prefix.
+  // ============================================================
+  const EXPORT_KEYS = [
+    'goal_streak_v1',
+    'stack:items', 'stack:version', 'stack:low',
+    'po_water_v1',
+    'nw_currency', 'nw:activity', 'nw:history', 'subs', 'wishlist', 'incoming_orders', 'finance_active_tab',
+    'po_coach_v1', 'po_coach_workout_done', 'po_coach_weights', 'po_coach_photos',
+    'po_food_v1', 'caf:logs', 'caf:custom', 'intake_active_tab',
+    'reflection:entries', 'reflection_active_tab',
+    'learn:categories', 'learn:entries',
+    'si:items', 'si:logs',
+    'ach:unlocks', 'ach:manual'
+  ];
+  const EXPORT_PREFIXES = ['goals:', 'stack:taken:', 'nw:'];
+
+  // Explicit blocklist — belt-and-suspenders even though the allowlist
+  // above never includes these. Never exported, never re-imported even
+  // if an old/foreign backup file somehow contained them.
+  const BLOCKLIST = ['whoop_tokens_v1', 'whoop_last_sync', 'nova_lite_api_key'];
+  const BLOCKLIST_PATTERN = /token|api_key|apikey|secret|auth|session|password/i;
+  function isBlocked(key) { return BLOCKLIST.indexOf(key) !== -1 || BLOCKLIST_PATTERN.test(key); }
+  function isExportable(key) {
+    if (isBlocked(key)) return false;
+    if (EXPORT_KEYS.indexOf(key) !== -1) return true;
+    return EXPORT_PREFIXES.some(p => key.indexOf(p) === 0);
+  }
+
+  function readLS(k) { try { const v = localStorage.getItem(k); return v == null ? null : JSON.parse(v); } catch (e) { return null; } }
+
+  function collectExportData() {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && isExportable(k)) { const v = readLS(k); if (v != null) data[k] = v; }
+    }
+    return data;
+  }
+
+  // ---------- "what's inside" chip counts ----------
+  function buildIncludeList() {
+    const gym = readLS('po_coach_v1') || {};
+    const gymSets = Object.values(gym.logs || {}).reduce((s, arr) => s + (Array.isArray(arr) ? arr.length : 0), 0) + (Array.isArray(gym.boxingSessions) ? gym.boxingSessions.length : 0);
+    const water = readLS('po_water_v1') || {};
+    const waterDays = Object.keys(water.logs || {}).length;
+    const caf = readLS('caf:logs') || [];
+    const food = readLS('po_food_v1') || [];
+    const learn = readLS('learn:entries') || [];
+    const nwActivity = readLS('nw:activity') || [];
+    const refl = readLS('reflection:entries') || [];
+    const siLogs = readLS('si:logs') || [];
+    const ach = (readLS('ach:unlocks') || []).length + (readLS('ach:manual') || []).length;
+
+    const items = [
+      { icon: '🏋️', label: 'Gym', n: gymSets },
+      { icon: '📚', label: 'Learning', n: learn.length },
+      { icon: '🧃', label: 'Intake', n: waterDays + caf.length + food.length },
+      { icon: '💰', label: 'Finance', n: nwActivity.length },
+      { icon: '📖', label: 'Reflection', n: refl.length },
+      { icon: '🌱', label: 'Self-Improvement', n: siLogs.length },
+      { icon: '🏆', label: 'Achievements', n: ach }
+    ];
+    $('includeList').innerHTML = items.map(it =>
+      '<span class="chip">' + it.icon + ' ' + it.label + ' <span class="n">' + it.n + '</span></span>'
+    ).join('');
+  }
+  buildIncludeList();
+
+  // ---------- status card ----------
+  function renderStatus() {
+    const last = localStorage.getItem(LAST_BACKUP_KEY);
+    const card = $('statusCard'), text = $('statusText'), sub = $('statusSub');
+    card.classList.remove('warn', 'overdue');
+    if (!last) {
+      text.textContent = 'Letztes Backup: Noch nie';
+      sub.textContent = '';
+      card.classList.add('overdue');
+      return;
+    }
+    const d = new Date(last);
+    const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    text.textContent = 'Letztes Backup: ' + (days <= 0 ? 'heute' : days === 1 ? 'vor 1 Tag' : 'vor ' + days + ' Tagen');
+    sub.textContent = d.toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' });
+    if (days > 14) card.classList.add('overdue');
+    else if (days >= 7) card.classList.add('warn');
+  }
+  renderStatus();
+
+  // ---------- export ----------
+  $('exportBtn').addEventListener('click', () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      version: BACKUP_VERSION,
+      comment: 'Semis Dashboard backup',
+      data: collectExportData()
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.href = url; a.download = 'dashboard-backup-' + dateStr + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    localStorage.setItem(LAST_BACKUP_KEY, new Date().toISOString());
+    renderStatus();
+    buildIncludeList();
+    $('exportStatus').textContent = 'Heruntergeladen ✓';
+    setTimeout(() => { $('exportStatus').textContent = ''; }, 2500);
+  });
+
+  // ---------- import ----------
+  const dropZone = $('dropZone'), fileInput = $('fileInput'), importStatus = $('importStatus');
+  dropZone.addEventListener('click', () => fileInput.click());
+  ['dragenter', 'dragover'].forEach(ev => dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach(ev => dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.remove('drag'); }));
+  dropZone.addEventListener('drop', (e) => {
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+  fileInput.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) handleFile(f);
+    fileInput.value = '';
+  });
+
+  function setImportStatus(msg, cls) {
+    importStatus.textContent = msg;
+    importStatus.className = 'import-status' + (cls ? ' ' + cls : '');
+  }
+
+  function handleFile(file) {
+    setImportStatus('Lese Datei…', '');
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed;
+      try { parsed = JSON.parse(reader.result); }
+      catch (e) { setImportStatus('❌ Das ist keine gültige JSON-Datei.', 'err'); return; }
+      if (!parsed || typeof parsed !== 'object' || !parsed.data || typeof parsed.data !== 'object') {
+        setImportStatus('❌ Diese Datei hat nicht die erwartete Backup-Struktur (fehlendes "data"-Feld).', 'err');
+        return;
+      }
+      const keys = Object.keys(parsed.data).filter(k => !isBlocked(k));
+      if (!keys.length) {
+        setImportStatus('❌ Die Datei enthält keine wiederherstellbaren Daten.', 'err');
+        return;
+      }
+      const when = parsed.exportedAt ? new Date(parsed.exportedAt).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'unbekanntem Datum';
+      const ok = window.confirm(
+        'Backup vom ' + when + ' einspielen?\n\n' +
+        keys.length + ' Datenfelder werden zurückgeschrieben und überschreiben deine aktuellen Werte für diese Bereiche.\n\n' +
+        'Bist du sicher?'
+      );
+      if (!ok) { setImportStatus('Abgebrochen.', ''); return; }
+      restoreData(parsed.data, keys);
+    };
+    reader.onerror = () => setImportStatus('❌ Datei konnte nicht gelesen werden.', 'err');
+    reader.readAsText(file);
+  }
+
+  function restoreData(data, keys) {
+    let written = 0;
+    keys.forEach(k => {
+      try { localStorage.setItem(k, JSON.stringify(data[k])); written++; } catch (e) {}
+    });
+    setImportStatus('✓ ' + written + ' Datenfelder wiederhergestellt. Synchronisiere mit der Cloud…', 'ok');
+    pushAllToCloud().then(() => {
+      setImportStatus('✓ ' + written + ' Datenfelder wiederhergestellt und synchronisiert.', 'ok');
+      buildIncludeList();
+    }).catch(() => {
+      setImportStatus('✓ ' + written + ' Datenfelder lokal wiederhergestellt (Cloud-Sync nicht möglich — offline oder kein Supabase erreichbar).', 'ok');
+      buildIncludeList();
+    });
+  }
+
+  // ============================================================
+  // POST-RESTORE CLOUD PUSH — push-only, never pulls. Restoring a
+  // backup means "this device's data wins"; a bidirectional sync
+  // here could silently overwrite the just-restored data with
+  // whatever's currently in the cloud, which is the opposite of
+  // what a restore is for.
+  // ============================================================
+  const APP_GROUPS = [
+    { appKey: 'health', keys: ['po_water_v1', 'stack:items', 'stack:version', 'stack:low'], prefixes: ['stack:taken:'] },
+    { appKey: 'finance', keys: ['subs', 'wishlist', 'incoming_orders', 'nw_currency', 'nw:activity', 'nw:history'], prefixes: ['nw:'] },
+    { appKey: 'caffeine', keys: ['caf:logs', 'caf:custom'], prefixes: [] },
+    { appKey: 'food', keys: ['po_food_v1'], prefixes: [] },
+    { appKey: 'goals', keys: [], prefixes: ['goals:'] },
+    { appKey: 'learning', keys: [], prefixes: ['learn:'] },
+    { appKey: 'reflection', keys: ['reflection:entries'], prefixes: [] },
+    { appKey: 'self_improvement', keys: ['si:items', 'si:logs'], prefixes: [] },
+    { appKey: 'achievements', keys: ['ach:unlocks', 'ach:manual'], prefixes: [] },
+    { appKey: 'po-coach', keys: ['po_coach_v1', 'po_coach_workout_done', 'po_coach_weights', 'po_coach_photos'], prefixes: [] }
+  ];
+  // Strip any large inline media fields before they go over the wire —
+  // mirrors gym.html's own caution around po_coach_photos' dataUrl field.
+  function stripMedia(v, depth) {
+    if (depth > 6) return v;
+    if (Array.isArray(v)) return v.map(x => stripMedia(x, depth + 1));
+    if (v && typeof v === 'object') {
+      const o = {};
+      for (const k in v) { o[k] = /dataurl|base64/i.test(k) ? '[omitted for sync]' : stripMedia(v[k], depth + 1); }
+      return o;
+    }
+    return v;
+  }
+  function groupState(group) {
+    const state = {};
+    group.keys.forEach(k => { const v = readLS(k); if (v != null) state[k] = stripMedia(v, 0); });
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && group.prefixes.some(p => k.indexOf(p) === 0)) { const v = readLS(k); if (v != null) state[k] = stripMedia(v, 0); }
+    }
+    return state;
+  }
+  async function pushAllToCloud() {
+    if (!window.supabase || SUPABASE_URL.indexOf('PASTE-') === 0) throw new Error('no supabase');
+    const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    for (const group of APP_GROUPS) {
+      const state = groupState(group);
+      if (!Object.keys(state).length) continue;
+      try {
+        await supa.from('app_state').upsert(
+          { key: group.appKey, data: state, updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        );
+      } catch (e) { /* best effort per group — keep going */ }
+    }
+  }
+})();
+</script>
+</body>
+</html>

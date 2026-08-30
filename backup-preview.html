@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vorschau · Backup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text-primary: #F2EFE6;
+  --text-secondary: #ABA79A;
+  --text-tertiary: #6F6C61;
+  --silver: #B9BAC2;
+  --gold: #C9A227;
+  --red: #E0524A;
+  --font-display: "Zilla Slab", Georgia, serif;
+  --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:#0A0C0B; color:var(--text-secondary); font-family:var(--font); -webkit-font-smoothing:antialiased; }
+body { min-height:100vh; padding:32px 20px 60px; position:relative; }
+body::before {
+  content:''; position:fixed; inset:0;
+  background: repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 42px);
+  pointer-events:none; z-index:-1;
+}
+.page { max-width: 640px; margin:0 auto; }
+.header { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+.header-emoji { font-size:26px; }
+h1 { font-family:var(--font-display); font-weight:700; letter-spacing:-0.01em; color:var(--text-primary); font-size:24px; margin:0; }
+.sub { font-family:var(--font-mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 26px; }
+
+.section-label { font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-tertiary); margin:0 0 10px; display:flex; align-items:center; gap:7px; }
+.section-label .line { flex:1; height:1px; background:rgba(255,255,255,0.08); }
+
+.status-card { display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:14px; margin-bottom:26px; background:rgba(255,255,255,0.03); border:1px solid rgba(111,227,160,0.25); }
+.status-card.warn { border-color:rgba(201,162,39,0.35); }
+.status-card.overdue { border-color:rgba(224,82,74,0.4); }
+.status-dot { width:9px; height:9px; border-radius:50%; background:#6FE3A0; flex:none; }
+.status-card.warn .status-dot { background:var(--gold); }
+.status-card.overdue .status-dot { background:var(--red); }
+.status-text { flex:1; font-size:13.5px; color:var(--text-primary); }
+.status-sub { font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); }
+
+.card { background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px; margin-bottom:22px; box-shadow: 0 14px 34px rgba(0,0,0,0.35); }
+.card-title { font-family:var(--font-display); font-size:17px; font-weight:700; color:var(--text-primary); margin:0 0 6px; }
+.card-desc { font-size:12.5px; color:var(--text-tertiary); margin:0 0 16px; line-height:1.6; }
+
+.include-list { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:18px; }
+.chip { font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); padding:5px 11px; border-radius:999px; }
+.chip .n { color:var(--text-primary); font-weight:600; }
+
+.excl-note { display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--text-tertiary); margin-bottom:18px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:9px; padding:9px 12px; }
+
+.export-btn { width:100%; padding:14px; border-radius:10px; border:none; font-weight:700; font-family:var(--font-display); font-size:16px; cursor:pointer; background:var(--gold); color:#0A0C0B; }
+
+.drop-zone { border:1.5px dashed rgba(255,255,255,0.15); border-radius:12px; padding:26px; text-align:center; color:var(--text-tertiary); font-size:12.5px; margin-bottom:14px; }
+.drop-zone .icon { font-size:24px; display:block; margin-bottom:8px; }
+.import-warn { font-size:11.5px; color:var(--red); background:rgba(224,82,74,0.08); border:1px solid rgba(224,82,74,0.25); border-radius:9px; padding:9px 12px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header"><span class="header-emoji">💾</span><h1>Backup</h1></div>
+  <p class="sub">Deine Daten, sicher exportiert</p>
+
+  <div class="status-card warn">
+    <span class="status-dot"></span>
+    <span class="status-text">Letztes Backup: vor 9 Tagen</span>
+    <span class="status-sub">14. Aug 2026</span>
+  </div>
+
+  <div class="section-label">Exportieren<span class="line"></span></div>
+  <div class="card">
+    <div class="card-title">Backup erstellen</div>
+    <div class="card-desc">Lädt alle deine Dashboard-Daten als einzelne JSON-Datei herunter. Enthält keine Zugangsdaten oder API-Keys.</div>
+    <div class="include-list">
+      <span class="chip">🏋️ Gym <span class="n">142 Einträge</span></span>
+      <span class="chip">📚 Learning <span class="n">38</span></span>
+      <span class="chip">🧃 Intake <span class="n">210</span></span>
+      <span class="chip">💰 Finance <span class="n">24</span></span>
+      <span class="chip">📖 Reflection <span class="n">9</span></span>
+      <span class="chip">🌱 Self-Improvement <span class="n">56</span></span>
+      <span class="chip">🏆 Achievements <span class="n">6</span></span>
+    </div>
+    <div class="excl-note">🔒 WHOOP-Zugangstoken und API-Keys werden bewusst nicht mit exportiert</div>
+    <button class="export-btn">💾 Backup erstellen & herunterladen</button>
+  </div>
+
+  <div class="section-label">Wiederherstellen<span class="line"></span></div>
+  <div class="card">
+    <div class="card-title">Backup einspielen</div>
+    <div class="card-desc">Stellt einen früheren Stand wieder her. Überschreibt deine aktuellen Daten.</div>
+    <div class="drop-zone"><span class="icon">📤</span>Datei hierher ziehen oder klicken zum Auswählen</div>
+    <div class="import-warn">⚠️ Das Einspielen überschreibt deine aktuellen Daten unwiderruflich. Du wirst vor dem Fortfahren noch einmal gefragt.</div>
+  </div>
+</div>
+</body>
+</html>
