@@ -465,6 +465,43 @@ img, video, canvas, svg { max-width: 100%; }
 .po-btn-primary:active { transform: translateY(0) scale(0.98); }
 .po-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
 
+/* ----- Kraft / Boxen type switcher ----- */
+.po-type-tabs {
+  display: flex; gap: 4px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 12px; padding: 4px; margin-bottom: 14px;
+}
+.po-type-tab {
+  flex: 1; padding: 10px 8px; border: none; background: transparent;
+  color: var(--text-3); border-radius: 8px;
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-type-tab.active { color: var(--text-1); }
+.po-type-tab[data-type="strength"].active {
+  background: linear-gradient(180deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 78%, black) 100%);
+}
+.po-type-tab[data-type="boxing"].active {
+  background: linear-gradient(180deg, var(--red) 0%, color-mix(in srgb, var(--red) 78%, black) 100%);
+}
+#boxingPanel .po-btn-primary {
+  background: linear-gradient(180deg, var(--red) 0%, color-mix(in srgb, var(--red) 78%, black) 100%);
+}
+.po-box-notes {
+  width: 100%; padding: 12px 14px; margin-top: 4px;
+  border: 1px solid var(--border); background: rgba(0,0,0,0.28);
+  color: var(--text-1); border-radius: 12px;
+  font-family: inherit; font-size: 14px; resize: vertical; min-height: 60px;
+}
+.po-box-notes:focus { outline: none; border-color: rgba(255,255,255,0.40); box-shadow: 0 0 0 3px rgba(255,255,255,0.06); }
+.po-tw-row.is-boxing .po-tw-row-name { color: var(--bad); }
+.po-tw-row-del {
+  background: transparent; border: none; color: var(--text-4);
+  font-size: 15px; cursor: pointer; padding: 2px 6px; margin-left: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+.po-tw-row-del:hover { color: var(--bad); }
+
 .po-btn-secondary {
   padding: 12px 18px;
   border: 1px solid var(--border);
@@ -1462,7 +1499,31 @@ img, video, canvas, svg { max-width: 100%; }
     </button>
   </div>
 
-  <div class="card">
+  <!-- This week (combined across Kraft + Boxen) -->
+  <div class="po-sub-section" style="margin-top: 0;">
+    <div class="po-sub-title">This week</div>
+    <div class="po-stats-row">
+      <div class="po-stat-box">
+        <div class="po-stat-label">Sessions</div>
+        <div class="po-stat-val" id="globalSessionCount">—</div>
+      </div>
+      <div class="po-stat-box">
+        <div class="po-stat-label">Strength PR</div>
+        <div class="po-stat-val" id="globalStrengthPr" style="color:var(--orange)">—</div>
+      </div>
+      <div class="po-stat-box">
+        <div class="po-stat-label">Boxing</div>
+        <div class="po-stat-val" id="globalBoxingSum" style="color:var(--red)">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="po-type-tabs" id="typeTabs">
+    <button type="button" class="po-type-tab active" data-type="strength">🏋️ Kraft</button>
+    <button type="button" class="po-type-tab" data-type="boxing">🥊 Boxen</button>
+  </div>
+
+  <div class="card" id="strengthPanel">
     <!-- Filters -->
     <div class="po-filters">
       <div class="po-seg-row">
@@ -1574,36 +1635,56 @@ img, video, canvas, svg { max-width: 100%; }
         <div class="po-empty">No logs yet.</div>
       </div>
     </div>
+  </div>
 
-    <!-- Today's Workout — every set logged today, grouped by exercise.
-         "Mark done" stamps the day so the past-workouts list shows it
-         as a completed session. The volume here also feeds the
-         composition estimate at the top of the page. -->
-    <div class="po-sub-section">
-      <div class="po-sub-title">Today's workout</div>
-      <div class="po-tw" id="poTw">
-        <div class="po-tw-head">
-          <div>
-            <div class="po-tw-eyebrow" id="poTwDateLabel">TODAY</div>
-            <div class="po-tw-summary">
-              <span class="po-tw-summary-num" id="poTwSetCount">0</span>
-              <span class="po-tw-summary-label">sets</span>
-              <span class="po-tw-summary-sep">·</span>
-              <span class="po-tw-summary-vol" id="poTwTotalVol">0 kg lifted</span>
-            </div>
-          </div>
-          <button class="po-tw-done-btn" id="poTwDoneBtn" type="button">Mark workout done</button>
-        </div>
-        <ul class="po-tw-list" id="poTwList"></ul>
-        <div class="po-tw-empty" id="poTwEmpty">No sets logged today — log one above and it'll appear here.</div>
+  <!-- Boxen -->
+  <div class="card" id="boxingPanel" style="display:none">
+    <div class="po-sub-title">Log a session</div>
+    <div class="po-log-grid">
+      <div class="po-field">
+        <label>Runden</label>
+        <input type="number" id="boxRounds" min="0" step="1" inputmode="numeric" placeholder="0">
       </div>
-
-      <button type="button" class="po-tw-past-toggle" id="poTwPastToggle" aria-expanded="false">
-        <span>Past workouts <span class="po-tw-past-count" id="poTwPastCount">0</span></span>
-        <span class="po-tw-past-arrow" id="poTwPastArrow">▾</span>
-      </button>
-      <div class="po-tw-past-body" id="poTwPastBody" style="display:none"></div>
+      <div class="po-field">
+        <label>Minuten</label>
+        <input type="number" id="boxMinutes" min="0" step="1" inputmode="numeric" placeholder="0">
+      </div>
     </div>
+    <div class="po-field">
+      <label>Notizen</label>
+      <textarea class="po-box-notes" id="boxNotes" rows="2" placeholder="Technik, Fokus… z.B. Kombinationen, Sparring"></textarea>
+    </div>
+    <button class="po-btn-primary" id="boxSaveBtn" type="button">🥊 Session speichern</button>
+  </div>
+
+  <!-- Verlauf — combined chronological history of both Kraft and Boxen,
+       grouped by day. "Mark done" stamps the day so the past-workouts
+       list shows it as a completed session. The strength volume here
+       also feeds the composition estimate at the top of the page. -->
+  <div class="card">
+    <div class="po-sub-title">Today's workout</div>
+    <div class="po-tw" id="poTw">
+      <div class="po-tw-head">
+        <div>
+          <div class="po-tw-eyebrow" id="poTwDateLabel">TODAY</div>
+          <div class="po-tw-summary">
+            <span class="po-tw-summary-num" id="poTwSetCount">0</span>
+            <span class="po-tw-summary-label">sets</span>
+            <span class="po-tw-summary-sep">·</span>
+            <span class="po-tw-summary-vol" id="poTwTotalVol">0 kg lifted</span>
+          </div>
+        </div>
+        <button class="po-tw-done-btn" id="poTwDoneBtn" type="button">Mark workout done</button>
+      </div>
+      <ul class="po-tw-list" id="poTwList"></ul>
+      <div class="po-tw-empty" id="poTwEmpty">No sets logged today — log one above and it'll appear here.</div>
+    </div>
+
+    <button type="button" class="po-tw-past-toggle" id="poTwPastToggle" aria-expanded="false">
+      <span>Past workouts <span class="po-tw-past-count" id="poTwPastCount">0</span></span>
+      <span class="po-tw-past-arrow" id="poTwPastArrow">▾</span>
+    </button>
+    <div class="po-tw-past-body" id="poTwPastBody" style="display:none"></div>
   </div>
 </div>
 
@@ -1739,6 +1820,7 @@ img, video, canvas, svg { max-width: 100%; }
     s.days  = (Array.isArray(s.days)  && s.days.length)  ? s.days  : CONFIG.days.slice();
     s.exercises = Array.isArray(s.exercises) ? s.exercises : buildDefaultExercises();
     s.logs = (s.logs && typeof s.logs === 'object') ? s.logs : {};
+    s.boxingSessions = Array.isArray(s.boxingSessions) ? s.boxingSessions : [];
     s.filterGym = s.filterGym || s.gyms[0].id;
     s.filterDay = s.filterDay || s.days[0].id;
     // Split rotation lives in state so the user can edit it via the pill modal.
@@ -2087,6 +2169,7 @@ img, video, canvas, svg { max-width: 100%; }
     renderRx(); renderStats(); renderSparkline(); renderHistory();
     renderTodaysWorkout();
     renderPastWorkouts();
+    renderGlobalStats();
     // Pre-fill weight input with last logged weight (or starting weight)
     const ex = getCurrentEx();
     if (ex && !ex.bw) {
@@ -2131,6 +2214,17 @@ img, video, canvas, svg { max-width: 100%; }
     return byDay;
   }
 
+  function boxingByDay() {
+    const byDay = {};
+    (state.boxingSessions || []).forEach(b => {
+      const dk = (b.date || '').slice(0, 10);
+      if (!dk) return;
+      if (!byDay[dk]) byDay[dk] = [];
+      byDay[dk].push(b);
+    });
+    return byDay;
+  }
+
   function fmtPastDate(dk) {
     const [y, m, d] = dk.split('-').map(Number);
     const dt = new Date(y, m - 1, d);
@@ -2169,14 +2263,16 @@ img, video, canvas, svg { max-width: 100%; }
     $('poTwSetCount').textContent = sum.totalSets;
     $('poTwTotalVol').textContent = Math.round(sum.totalVol).toLocaleString() + ' ' + u + ' lifted';
 
+    const todayBoxing = (boxingByDay()[todayKey] || []);
+
     const list = $('poTwList');
     const empty = $('poTwEmpty');
-    if (sum.totalSets === 0) {
+    if (sum.totalSets === 0 && !todayBoxing.length) {
       list.innerHTML = '';
       empty.classList.remove('hidden');
     } else {
       empty.classList.add('hidden');
-      list.innerHTML = sum.perEx.map(e => {
+      let html = sum.perEx.map(e => {
         const top = e.ex.bw
           ? 'top ' + Math.max.apply(null, e.sets.map(s => s.reps)) + ' reps'
           : 'top ' + Math.max.apply(null, e.sets.map(s => s.weight)) + u;
@@ -2188,6 +2284,20 @@ img, video, canvas, svg { max-width: 100%; }
           + '<span class="po-tw-row-meta">' + meta + '</span>'
           + '</li>';
       }).join('');
+      html += todayBoxing.map(b =>
+        '<li class="po-tw-row is-boxing" data-boxid="' + b.id + '">'
+        + '<span class="po-tw-row-name">🥊 Boxing</span>'
+        + '<span class="po-tw-row-meta">' + (b.rounds || 0) + ' rounds · ' + (b.durationMinutes || 0) + ' min'
+        + '<button type="button" class="po-tw-row-del" data-boxid="' + b.id + '" aria-label="Delete">×</button></span>'
+        + '</li>'
+      ).join('');
+      list.innerHTML = html;
+      list.querySelectorAll('.po-tw-row-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.boxingSessions = state.boxingSessions.filter(b => b.id !== btn.dataset.boxid);
+          saveState(); renderTodaysWorkout(); renderPastWorkouts(); renderGlobalStats();
+        });
+      });
     }
 
     // Done button state
@@ -2195,16 +2305,17 @@ img, video, canvas, svg { max-width: 100%; }
     const isDone = !!doneDays[todayKey];
     btn.textContent = isDone ? '✓ Done' : 'Mark workout done';
     btn.classList.toggle('is-done', isDone);
-    btn.disabled = sum.totalSets === 0 && !isDone;
+    btn.disabled = sum.totalSets === 0 && !todayBoxing.length && !isDone;
     btn.style.opacity = btn.disabled ? '0.4' : '';
   }
 
   function renderPastWorkouts() {
     const todayKey = wtDateKey(new Date());
     const all = logsByDay();
-    const past = Object.entries(all)
-      .filter(([dk]) => dk !== todayKey)
-      .sort((a, b) => b[0].localeCompare(a[0]));
+    const boxAll = boxingByDay();
+    const dayKeys = new Set(Object.keys(all).concat(Object.keys(boxAll)));
+    dayKeys.delete(todayKey);
+    const past = Array.from(dayKeys).sort((a, b) => b.localeCompare(a));
     $('poTwPastCount').textContent = past.length;
     const body = $('poTwPastBody');
     if (!past.length) {
@@ -2212,23 +2323,33 @@ img, video, canvas, svg { max-width: 100%; }
       return;
     }
     const u = state.units;
-    body.innerHTML = past.slice(0, 30).map(([dk, sets]) => {
+    body.innerHTML = past.slice(0, 30).map(dk => {
+      const sets = all[dk] || [];
+      const boxing = boxAll[dk] || [];
       const sum = summarizeDay(sets);
       const isDone = !!doneDays[dk];
       const exNames = sum.perEx.map(e => e.ex.name).slice(0, 3).join(', ')
         + (sum.perEx.length > 3 ? '…' : '');
-      return '<div class="po-tw-past-day">'
+      let html = '<div class="po-tw-past-day">'
         + '<div class="po-tw-past-day-h">'
         +   '<span class="po-tw-past-day-date">' + fmtPastDate(dk) + '</span>'
         +   '<span class="po-tw-past-day-summary">'
         +     sum.totalSets + ' sets · ' + Math.round(sum.totalVol).toLocaleString() + ' ' + u
         +     (isDone ? ' <span class="po-tw-past-day-done">DONE</span>' : '')
         +   '</span>'
-        + '</div>'
-        + '<div class="po-tw-past-day-summary" style="margin-top:6px; font-size:11px; color:var(--text-3);">'
-        +   escape(exNames)
-        + '</div>'
         + '</div>';
+      if (exNames) {
+        html += '<div class="po-tw-past-day-summary" style="margin-top:6px; font-size:11px; color:var(--text-3);">'
+          + escape(exNames) + '</div>';
+      }
+      if (boxing.length) {
+        const rounds = boxing.reduce((s, b) => s + (b.rounds || 0), 0);
+        const mins = boxing.reduce((s, b) => s + (b.durationMinutes || 0), 0);
+        html += '<div class="po-tw-past-day-summary" style="margin-top:4px; font-size:11px; color:var(--bad);">'
+          + '🥊 ' + boxing.length + '× Boxing · ' + rounds + ' rounds · ' + mins + ' min</div>';
+      }
+      html += '</div>';
+      return html;
     }).join('');
   }
 
@@ -2250,6 +2371,81 @@ img, video, canvas, svg { max-width: 100%; }
     body.style.display = open ? 'none' : 'flex';
     body.style.flexDirection = 'column';
     toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+  });
+
+  // ============================================================
+  // GLOBAL STATS — combined "this week" summary shown above the
+  // Kraft/Boxen type switcher (Sessions counts both types; Strength PR
+  // is the best weight/rep jump this week vs. before; Boxing is total
+  // minutes this week).
+  // ============================================================
+  function startOfWeek(d) { const day = (d.getDay() + 6) % 7; const s = new Date(d); s.setHours(0, 0, 0, 0); s.setDate(s.getDate() - day); return s; }
+
+  function renderGlobalStats() {
+    const weekStartKey = wtDateKey(startOfWeek(new Date()));
+    const all = logsByDay();
+    const boxAll = boxingByDay();
+    const sessionDays = new Set();
+    Object.keys(all).forEach(dk => { if (dk >= weekStartKey) sessionDays.add(dk); });
+    Object.keys(boxAll).forEach(dk => { if (dk >= weekStartKey) sessionDays.add(dk); });
+    $('globalSessionCount').textContent = sessionDays.size || '—';
+
+    let bestDelta = null;
+    state.exercises.forEach(ex => {
+      const logs = (state.logs[ex.id] || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      const before = logs.filter(l => l.date.slice(0, 10) < weekStartKey);
+      const within = logs.filter(l => l.date.slice(0, 10) >= weekStartKey);
+      if (!within.length || !before.length) return;
+      if (ex.bw) {
+        const d = Math.max.apply(null, within.map(l => l.reps || 0)) - Math.max.apply(null, before.map(l => l.reps || 0));
+        if (d > 0 && (!bestDelta || d > bestDelta.raw)) bestDelta = { raw: d, text: '+' + d + ' reps ' + ex.name };
+      } else {
+        const d = Math.max.apply(null, within.map(l => l.weight || 0)) - Math.max.apply(null, before.map(l => l.weight || 0));
+        if (d > 0 && (!bestDelta || d > bestDelta.raw)) bestDelta = { raw: d, text: '+' + d + state.units + ' ' + ex.name };
+      }
+    });
+    $('globalStrengthPr').textContent = bestDelta ? bestDelta.text : '—';
+
+    const boxThisWeek = (state.boxingSessions || []).filter(b => (b.date || '').slice(0, 10) >= weekStartKey);
+    if (boxThisWeek.length) {
+      const mins = boxThisWeek.reduce((s, b) => s + (b.durationMinutes || 0), 0);
+      $('globalBoxingSum').textContent = mins + ' min';
+    } else {
+      $('globalBoxingSum').textContent = '—';
+    }
+  }
+
+  // ============================================================
+  // KRAFT / BOXEN TYPE SWITCHER
+  // ============================================================
+  document.querySelectorAll('#typeTabs .po-type-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#typeTabs .po-type-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const type = btn.dataset.type;
+      $('strengthPanel').style.display = type === 'strength' ? '' : 'none';
+      $('boxingPanel').style.display = type === 'boxing' ? '' : 'none';
+    });
+  });
+
+  $('boxSaveBtn').addEventListener('click', () => {
+    const rounds = parseInt($('boxRounds').value, 10) || 0;
+    const minutes = parseInt($('boxMinutes').value, 10) || 0;
+    if (minutes <= 0) { alert('Enter the session duration in minutes.'); return; }
+    const notes = $('boxNotes').value.trim();
+    state.boxingSessions.push({
+      id: 'box_' + Date.now() + '_' + Math.floor(Math.random() * 9999),
+      date: new Date().toISOString(),
+      rounds: rounds, durationMinutes: minutes, notes: notes,
+      createdAt: new Date().toISOString()
+    });
+    saveState();
+    $('boxRounds').value = ''; $('boxMinutes').value = ''; $('boxNotes').value = '';
+    renderTodaysWorkout(); renderPastWorkouts(); renderGlobalStats();
+    const btn = $('boxSaveBtn');
+    btn.style.transition = 'transform 0.15s';
+    btn.style.transform = 'scale(0.96)';
+    setTimeout(() => { btn.style.transform = ''; }, 160);
   });
 
   // ============================================================

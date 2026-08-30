@@ -284,14 +284,24 @@ textarea:focus { border-color: rgba(90,200,176,0.4); }
         if (d !== 0) deltas.push({ name: ex.name, raw: d, text: (d > 0 ? '+' : '') + d + unit });
       }
     });
+    const boxing = (Array.isArray(state.boxingSessions) ? state.boxingSessions : [])
+      .filter(b => b && b.date && inPeriod(new Date(b.date), ps, pe));
+    boxing.forEach(b => sessionDates.add(toISO(new Date(b.date))));
+
     if (!sessionDates.size) return null;
     deltas.sort((a, b) => b.raw - a.raw);
     const top = deltas[0];
+    const detail = deltas.map(d => d.name + ' ' + d.text);
+    if (boxing.length) {
+      const rounds = boxing.reduce((s, b) => s + (b.rounds || 0), 0);
+      const mins = boxing.reduce((s, b) => s + (b.durationMinutes || 0), 0);
+      detail.push('🥊 ' + boxing.length + '× Boxen, ' + mins + ' Min. gesamt' + (rounds ? ' (' + rounds + ' Runden)' : ''));
+    }
     return {
       label: 'Gym — ' + sessionDates.size + ' Session' + (sessionDates.size === 1 ? '' : 's'),
       value: sessionDates.size,
       display: top ? (top.text + ' ' + top.name) : (sessionDates.size + ' Sessions'),
-      detail: deltas.length ? deltas.map(d => d.name + ' ' + d.text) : null
+      detail: detail.length ? detail : null
     };
   }
 
